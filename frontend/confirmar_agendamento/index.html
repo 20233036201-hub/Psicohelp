@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Confirmar Agendamento - PsicoHelp</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background: linear-gradient(135deg, #007f7f, #009999);
+      color: white;
+    }
+    
+    header {
+      background: transparent;
+      text-align: center;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+    
+    header h1 {
+      color: #ffcc66;
+      font-size: 32px;
+      margin: 0;
+    }
+    
+    .container {
+      max-width: 600px;
+      margin: 0 auto 100px auto;
+      padding: 0 20px;
+    }
+    
+    .agendamento-card {
+      background: #009999;
+      border-radius: 15px;
+      padding: 25px;
+      margin: 15px 0;
+      border: 2px solid #ffcc66;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    }
+    
+    .psicologo-info {
+      text-align: center;
+      margin-bottom: 25px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid #ffcc66;
+    }
+    
+    .psicologo-nome {
+      font-size: 1.5em;
+      color: #ffcc66;
+      margin-bottom: 5px;
+    }
+    
+    .psicologo-especialidade {
+      color: #ffe9b3;
+      font-size: 1.1em;
+    }
+    
+    .form-group {
+      margin-bottom: 20px;
+    }
+    
+    .form-group label {
+      display: block;
+      color: #ffcc66;
+      margin-bottom: 8px;
+      font-weight: bold;
+    }
+    
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid #ffcc66;
+      border-radius: 8px;
+      background: rgba(255,255,255,0.9);
+      font-size: 1em;
+      box-sizing: border-box;
+    }
+    
+    .form-group textarea {
+      height: 80px;
+      resize: vertical;
+    }
+    
+    .datetime-group {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+    }
+    
+    .btn-confirmar {
+      background: #ffcc66;
+      color: #007f7f;
+      border: none;
+      padding: 15px 30px;
+      border-radius: 10px;
+      font-size: 1.2em;
+      font-weight: bold;
+      cursor: pointer;
+      width: 100%;
+      margin-top: 10px;
+    }
+    
+    .btn-confirmar:hover {
+      background: #ffb84d;
+    }
+    
+    .btn-voltar {
+      background: transparent;
+      color: #ffcc66;
+      border: 2px solid #ffcc66;
+      padding: 10px 20px;
+      border-radius: 8px;
+      cursor: pointer;
+      margin-top: 15px;
+      width: 100%;
+    }
+    
+    .loading {
+      text-align: center;
+      padding: 20px;
+      color: #ffe9b3;
+    }
+    
+    nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: #009999;
+      display: flex;
+      justify-content: space-around;
+      padding: 10px;
+      border-top: 2px solid #ffcc66;
+    }
+    
+    nav button {
+      background: #ffcc66;
+      color: #007f7f;
+      border: none;
+      padding: 12px 15px;
+      border-radius: 10px;
+      font-size: 0.9em;
+      font-weight: bold;
+      width: 23%;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>PsicoHelp</h1>
+    <p>Confirmar Agendamento 📅</p>
+  </header>
+
+  <div class="container">
+    <div id="loading" class="loading">
+      Carregando informações do psicólogo...
+    </div>
+
+    <div id="agendamento-form" style="display: none;">
+      <div class="agendamento-card">
+        <div class="psicologo-info">
+          <div class="psicologo-nome" id="psicologo-nome">Dr. João Silva</div>
+          <div class="psicologo-especialidade" id="psicologo-especialidade">Psicologia Clínica</div>
+        </div>
+
+        <form id="formAgendamento">
+          <div class="form-group">
+            <label for="data">📅 Data da Consulta:</label>
+            <input type="date" id="data" required min="">
+          </div>
+
+          <div class="form-group">
+            <label for="horario">⏰ Horário:</label>
+            <select id="horario" required>
+              <option value="">Selecione um horário</option>
+              <option value="08:00">08:00</option>
+              <option value="09:00">09:00</option>
+              <option value="10:00">10:00</option>
+              <option value="11:00">11:00</option>
+              <option value="14:00">14:00</option>
+              <option value="15:00">15:00</option>
+              <option value="16:00">16:00</option>
+              <option value="17:00">17:00</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="observacoes">📝 Observações (opcional):</label>
+            <textarea id="observacoes" placeholder="Alguma observação importante sobre a consulta..."></textarea>
+          </div>
+
+          <button type="submit" class="btn-confirmar">
+            ✅ Confirmar Agendamento
+          </button>
+        </form>
+
+        <button class="btn-voltar" onclick="window.history.back()">
+          ↩️ Voltar para a lista
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <nav>
+    <button onclick="window.location.href='/agendar'">📅 Agendar</button>
+    <button onclick="window.location.href='/home'">📰 Feed</button>
+    <button onclick="window.location.href='/minhas_consultas'">📋 Consultas</button>
+    <button onclick="window.location.href='/perfil'">👤 Perfil</button>
+  </nav>
+
+  <script>
+    // Pega os parâmetros da URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const idPsicologo = urlParams.get('id_psicologo');
+    const nomePsicologo = urlParams.get('nome');
+
+    async function carregarDadosPsicologo() {
+      if (!idPsicologo) {
+        alert('Psicólogo não especificado!');
+        window.location.href = '/agendar';
+        return;
+      }
+
+      try {
+        // Carrega dados completos do psicólogo
+        const response = await fetch('/api/psicologos');
+        const psicologos = await response.json();
+        
+        const psicologo = psicologos.find(p => p.id_usuario == idPsicologo);
+        
+        if (!psicologo) {
+          throw new Error('Psicólogo não encontrado');
+        }
+
+        // Preenche os dados na tela
+        document.getElementById('psicologo-nome').textContent = nomePsicologo || psicologo.nome;
+        document.getElementById('psicologo-especialidade').textContent = psicologo.especialidade || 'Psicologia Geral';
+        
+        // Configura data mínima (hoje)
+        const hoje = new Date().toISOString().split('T')[0];
+        document.getElementById('data').min = hoje;
+        
+        // Mostra o formulário
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('agendamento-form').style.display = 'block';
+        
+      } catch (error) {
+        console.error('Erro:', error);
+        document.getElementById('loading').innerHTML = `
+          <div style="color: #ff6b6b; text-align: center;">
+            ❌ Erro ao carregar dados do psicólogo<br>
+            <button onclick="window.location.href='/agendar'" 
+                    style="background: #ffcc66; color: #007f7f; border: none; padding: 10px 20px; border-radius: 8px; margin-top: 10px; cursor: pointer;">
+              Voltar para a lista
+            </button>
+          </div>
+        `;
+      }
+    }
+
+    // Submit do formulário
+    document.getElementById('formAgendamento').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const agendamento = {
+        id_psicologo: idPsicologo,
+        data: document.getElementById('data').value,
+        horario: document.getElementById('horario').value,
+        observacoes: document.getElementById('observacoes').value
+    };
+
+    // Validações
+    if (!agendamento.data || !agendamento.horario) {
+        alert('❌ Preencha todos os campos obrigatórios!');
+        return;
+    }
+
+    try {
+        const response = await fetch('/api/agendamentos', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(agendamento)
+        });
+
+        const data = await response.json();
+        console.log('Resposta da API:', data); // DEBUG
+
+        if (data.success) {
+            alert('✅ Consulta agendada com sucesso!');
+            window.location.href = '/minhas_consultas';
+        } else {
+            alert('❌ Erro: ' + (data.error || 'Erro ao agendar consulta'));
+        }
+    } catch (error) {
+        console.error('Erro:', error);
+        alert('❌ Erro ao conectar com o servidor');
+    }
+  });
+
+    // Carrega os dados quando a página abre
+    carregarDadosPsicologo();
+  </script>
+</body>
+</html>

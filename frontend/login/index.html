@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - Psicohelp</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <h2>Login</h2>
+
+    <form id="loginForm">
+      <label for="email">Digite seu Email:</label>
+      <input type="email" id="email" placeholder="exemplo@email.com" required>
+
+      <label for="senha">Digite sua Senha:</label>
+      <input type="password" id="senha" placeholder="********" required>
+
+      <button type="submit" class="btn">Confirmar</button>
+    </form>
+
+    <div class="links">
+      <p class="switch">Não tem conta?</p>
+      <a href="../cadastro_cliente/index.html">Sou Cliente</a> |
+      <a href="../cadastro_psicologo/index.html">Sou Psicólogo</a>
+    </div>
+  </div>
+
+  <script>
+  document.getElementById('loginForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+  
+    const email = document.getElementById('email').value;
+    const senha = document.getElementById('senha').value;
+
+    try {
+      const response = await fetch('/api/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ email, senha })
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        alert(data.message);
+        // ✅ CORRETO - usa a ROTA do servidor
+        window.location.href = '/home';
+      } else {
+        alert('Erro: ' + data.error);
+      }
+    } catch (error) {
+      alert('Erro ao conectar com o servidor');
+    }
+  });
+  </script>
+</body>
+</html>

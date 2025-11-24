@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meu Perfil - PsicoHelp</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #007f7f, #009999);
+            color: white;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+        }
+        
+        header h1 {
+            color: #ffcc66;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .profile-card {
+            background: #009999;
+            border-radius: 15px;
+            padding: 30px;
+            border: 3px solid #ffcc66;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            margin-bottom: 30px;
+        }
+        
+        .profile-header {
+            text-align: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #ffcc66;
+        }
+        
+        .profile-avatar {
+            width: 100px;
+            height: 100px;
+            background: #ffcc66;
+            border-radius: 50%;
+            margin: 0 auto 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5em;
+            color: #007f7f;
+        }
+        
+        .profile-name {
+            font-size: 1.8em;
+            color: #ffcc66;
+            margin-bottom: 5px;
+        }
+        
+        .profile-email {
+            color: #ffe9b3;
+            font-size: 1.1em;
+        }
+        
+        .info-section {
+            margin-bottom: 25px;
+        }
+        
+        .info-title {
+            color: #ffcc66;
+            font-size: 1.3em;
+            margin-bottom: 15px;
+            border-left: 4px solid #ffcc66;
+            padding-left: 10px;
+        }
+        
+        .info-item {
+            background: rgba(255,255,255,0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .info-label {
+            color: #ffcc66;
+            font-weight: bold;
+            min-width: 120px;
+        }
+        
+        .info-value {
+            color: white;
+            text-align: right;
+            flex: 1;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #ffe9b3;
+            font-size: 1.2em;
+        }
+        
+        .error {
+            text-align: center;
+            padding: 40px;
+            color: #ff6b6b;
+            background: rgba(255,107,107,0.1);
+            border-radius: 15px;
+            border: 2px solid #ff6b6b;
+        }
+        
+        nav {
+            background: #009999;
+            display: flex;
+            justify-content: space-around;
+            padding: 15px;
+            border-radius: 15px;
+            border: 2px solid #ffcc66;
+            margin-top: 20px;
+        }
+        
+        nav button {
+            background: #ffcc66;
+            color: #007f7f;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 10px;
+            font-weight: bold;
+            cursor: pointer;
+            flex: 1;
+            margin: 0 5px;
+        }
+        
+        .btn-editar {
+            background: #ffcc66;
+            color: #007f7f;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 10px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>👤 Meu Perfil</h1>
+            <p>Gerencie suas informações pessoais</p>
+        </header>
+
+        <div id="profile-content">
+            <div class="loading">
+                🕐 Carregando seus dados...
+            </div>
+        </div>
+
+        <nav>
+            <button onclick="window.location.href='/agendar'">📅 Agendar</button>
+            <button onclick="window.location.href='/home'">📰 Feed</button>
+            <button onclick="window.location.href='/minhas_consultas'">📋 Consultas</button>
+            <button onclick="window.location.href='/perfil'">👤 Perfil</button>
+        </nav>
+    </div>
+
+    <script>
+        async function carregarPerfil() {
+            try {
+                // 🎯 SIMPLES: Sempre mostra o usuário 1 (João)
+                const userId = 1;
+                
+                const response = await fetch(`/api/usuario/${userId}`);
+                const usuario = await response.json();
+                
+                document.getElementById('profile-content').innerHTML = `
+                    <div class="profile-card">
+                        <div class="profile-header">
+                            <div class="profile-avatar">
+                                ${usuario.nome.charAt(0).toUpperCase()}
+                            </div>
+                            <div class="profile-name">${usuario.nome}</div>
+                            <div class="profile-email">${usuario.email}</div>
+                        </div>
+                        
+                        <div class="info-section">
+                            <div class="info-title">📋 Informações Pessoais</div>
+                            
+                            <div class="info-item">
+                                <span class="info-label">👤 Nome:</span>
+                                <span class="info-value">${usuario.nome}</span>
+                            </div>
+                            
+                            <div class="info-item">
+                                <span class="info-label">📧 Email:</span>
+                                <span class="info-value">${usuario.email}</span>
+                            </div>
+                            
+                            <div class="info-item">
+                                <span class="info-label">📞 Telefone:</span>
+                                <span class="info-value">${usuario.telefone || 'Não informado'}</span>
+                            </div>
+                            
+                            <div class="info-item">
+                                <span class="info-label">🎯 Tipo:</span>
+                                <span class="info-value">${usuario.tipo === 'psicologo' ? '👨‍⚕️ Psicólogo' : '👤 Cliente'}</span>
+                            </div>
+                        </div>
+                        
+                        <button class="btn-editar" onclick="editarPerfil()">
+                            ✏️ Editar Perfil
+                        </button>
+                    </div>
+                `;
+                
+            } catch (error) {
+                console.error('Erro:', error);
+                document.getElementById('profile-content').innerHTML = `
+                    <div class="error">
+                        <h3>❌ Erro ao carregar perfil</h3>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        function editarPerfil() {
+            alert('Editar perfil em desenvolvimento!');
+        }
+
+        // Carrega quando a página abre
+        window.onload = carregarPerfil;
+    </script>
+</body>
+</html>

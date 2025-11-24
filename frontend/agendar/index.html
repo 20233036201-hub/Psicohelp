@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Agendar Consulta - PsicoHelp</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background: linear-gradient(135deg, #007f7f, #009999);
+      color: white;
+    }
+    
+    header {
+      background: transparent;
+      text-align: center;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+    
+    header h1 {
+      color: #ffcc66;
+      font-size: 32px;
+      margin: 0;
+    }
+    
+    .content {
+      max-width: 800px;
+      margin: 0 auto 100px auto;
+      padding: 0 20px;
+    }
+    
+    .content h2 {
+      text-align: center;
+      color: #ffcc66;
+      margin-bottom: 20px;
+    }
+    
+    .psicologo-card {
+      background: #009999;
+      border-radius: 15px;
+      padding: 20px;
+      margin: 15px 0;
+      border: 2px solid #ffcc66;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    
+    .psicologo-card:hover {
+      transform: translateY(-2px);
+      background: #008080;
+    }
+    
+    .psicologo-nome {
+      font-size: 1.3em;
+      font-weight: bold;
+      color: #ffcc66;
+      margin-bottom: 5px;
+    }
+    
+    .psicologo-especialidade {
+      color: #ffe9b3;
+      margin-bottom: 10px;
+    }
+    
+    .psicologo-crp {
+      background: #ffcc66;
+      color: #007f7f;
+      padding: 3px 8px;
+      border-radius: 12px;
+      font-size: 0.8em;
+      font-weight: bold;
+      display: inline-block;
+    }
+    
+    /* MODAL DETALHES */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.8);
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+    
+    .modal-content {
+      background: #009999;
+      padding: 25px;
+      border-radius: 15px;
+      width: 90%;
+      max-width: 500px;
+      border: 3px solid #ffcc66;
+      max-height: 80vh;
+      overflow-y: auto;
+    }
+    
+    .modal-close {
+      background: #ff6b6b;
+      color: white;
+      border: none;
+      padding: 8px 15px;
+      border-radius: 8px;
+      cursor: pointer;
+      float: right;
+      margin-bottom: 15px;
+    }
+    
+    .modal-detail {
+      margin: 10px 0;
+      padding: 10px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 8px;
+    }
+    
+    .detail-label {
+      color: #ffcc66;
+      font-weight: bold;
+      font-size: 0.9em;
+    }
+    
+    .detail-value {
+      color: white;
+      margin-top: 5px;
+    }
+    
+    .btn-agendar {
+      background: #ffcc66;
+      color: #007f7f;
+      border: none;
+      padding: 12px 25px;
+      border-radius: 10px;
+      font-size: 1.1em;
+      font-weight: bold;
+      cursor: pointer;
+      width: 100%;
+      margin-top: 20px;
+    }
+    
+    .btn-agendar:hover {
+      background: #ffb84d;
+    }
+    
+    nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: #009999;
+      display: flex;
+      justify-content: space-around;
+      padding: 10px;
+      border-top: 2px solid #ffcc66;
+      z-index: 999;
+    }
+    
+    nav button {
+      background: #ffcc66;
+      color: #007f7f;
+      border: none;
+      padding: 12px 15px;
+      border-radius: 10px;
+      font-size: 0.9em;
+      font-weight: bold;
+      width: 23%;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>PsicoHelp</h1>
+    <p>Encontre o psicólogo ideal para você 💙</p>
+  </header>
+
+  <div class="content">
+    <h2>Psicólogos Disponíveis</h2>
+    
+    <div id="lista-psicologos">
+      <div style="text-align: center; padding: 20px; color: #ffe9b3;">
+        Carregando psicólogos...
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL DE DETALHES -->
+  <div id="modalDetalhes" class="modal">
+    <div class="modal-content">
+      <button class="modal-close" onclick="fecharModal()">✕ Fechar</button>
+      <div id="modal-body">
+        <!-- Conteúdo do modal será preenchido via JavaScript -->
+      </div>
+    </div>
+  </div>
+
+  <nav>
+    <button onclick="window.location.href='/agendar'">📅 Agendar</button>
+    <button onclick="window.location.href='/home'">📰 Feed</button>
+    <button onclick="window.location.href='/minhas_consultas'">📋 Consultas</button>
+    <button onclick="window.location.href='/perfil'">👤 Perfil</button>
+  </nav>
+
+  <script>
+    let psicologosData = [];
+
+    async function carregarPsicologos() {
+        try {
+            const response = await fetch('/api/psicologos');
+            psicologosData = await response.json();
+            
+            console.log('Dados dos psicólogos:', psicologosData);
+            
+            const container = document.getElementById('lista-psicologos');
+            
+            if (psicologosData.length === 0) {
+                container.innerHTML = '<div style="text-align: center; padding: 40px; color: #ffe9b3; background: #009999; border-radius: 15px; border: 2px solid #ffcc66;">Nenhum psicólogo cadastrado ainda</div>';
+                return;
+            }
+            
+            container.innerHTML = psicologosData.map(psicologo => `
+                <div class="psicologo-card" onclick="mostrarDetalhes(${psicologo.id_usuario})">
+                    <div class="psicologo-nome">${psicologo.nome}</div>
+                    <div class="psicologo-especialidade">${psicologo.especialidade || 'Psicologia Geral'}</div>
+                    <span class="psicologo-crp">CRP: ${psicologo.CRP}</span>
+                </div>
+            `).join('');
+            
+        } catch (error) {
+            console.error('Erro:', error);
+            document.getElementById('lista-psicologos').innerHTML = '<div style="text-align: center; padding: 40px; color: #ff6b6b; background: #009999; border-radius: 15px; border: 2px solid #ffcc66;">Erro ao carregar psicólogos</div>';
+        }
+    }
+
+    function mostrarDetalhes(idUsuario) {
+        const psicologo = psicologosData.find(p => p.id_usuario === idUsuario);
+        
+        if (!psicologo) return;
+        
+        console.log('🔍 DADOS COMPLETOS DO PSICÓLOGO:', psicologo);
+        
+        const modalBody = document.getElementById('modal-body');
+        modalBody.innerHTML = `
+            <h2 style="color: #ffcc66; margin-top: 0;">${psicologo.nome}</h2>
+            
+            <div class="modal-detail">
+                <div class="detail-label">CRP</div>
+                <div class="detail-value">${psicologo.CRP || 'Não informado'}</div>
+            </div>
+            
+            <div class="modal-detail">
+                <div class="detail-label">Especialidade</div>
+                <div class="detail-value">${psicologo.especialidade || 'Não informada'}</div>
+            </div>
+            
+            <div class="modal-detail">
+                <div class="detail-label">Formação</div>
+                <div class="detail-value">${psicologo.formacao || 'Não informada'}</div>
+            </div>
+            
+            <div class="modal-detail">
+                <div class="detail-label">Abordagem</div>
+                <div class="detail-value">${psicologo.abordagem || 'Não informada'}</div>
+            </div>
+            
+            <div class="modal-detail">
+                <div class="detail-label">Experiência</div>
+                <div class="detail-value">${psicologo.experiencia ? psicologo.experiencia + ' anos' : 'Não informada'}</div>
+            </div>
+            
+            <div class="modal-detail">
+                <div class="detail-label">Descrição</div>
+                <div class="detail-value">${psicologo.descricao || 'Não informada'}</div>
+            </div>
+            
+            <div class="modal-detail">
+                <div class="detail-label">Telefone</div>
+                <div class="detail-value">${psicologo.telefone || 'Não informado'}</div>
+            </div>
+            
+            <div class="modal-detail">
+                <div class="detail-label">Status</div>
+                <div class="detail-value">${psicologo.status === 'ativo' ? '✅ Disponível para consultas' : '⏳ Aguardando aprovação'}</div>
+            </div>
+            
+            <button class="btn-agendar" onclick="agendarConsulta(${psicologo.id_usuario}, '${psicologo.nome.replace(/'/g, "\\'")}')">
+                ✅ Agendar Consulta com ${psicologo.nome.split(' ')[0]}
+            </button>
+        `;
+        
+        document.getElementById('modalDetalhes').style.display = 'flex';
+    }
+
+    function fecharModal() {
+        document.getElementById('modalDetalhes').style.display = 'none';
+    }
+
+    function agendarConsulta(idPsicologo, nomePsicologo) {
+        console.log('🎯 BOTÃO CLICADO! Redirecionando...');
+        fecharModal();
+        
+        // URL CORRETA - SEM CÓDIGO DUPLICADO
+        const url = `http://localhost:3000/confirmar_agendamento?id_psicologo=${idPsicologo}&nome=${encodeURIComponent(nomePsicologo)}`;
+        console.log('🔗 URL:', url);
+        
+        window.location.href = url;
+    }
+
+    // Fecha modal clicando fora
+    document.getElementById('modalDetalhes').addEventListener('click', function(e) {
+        if (e.target === this) {
+            fecharModal();
+        }
+    });
+
+    // Carrega automaticamente
+    carregarPsicologos();
+  </script>
+</body>
+</html>

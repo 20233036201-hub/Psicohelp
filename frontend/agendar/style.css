@@ -1,0 +1,161 @@
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: linear-gradient(135deg, #007f7f, #009999);
+    color: white;
+    padding: 20px;
+    min-height: 100vh;
+}
+
+.container {
+    max-width: 600px;
+    margin: 0 auto;
+    background: #009999;
+    border-radius: 25px;
+    padding: 40px;
+    box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+h2 {
+    color: #ffcc66;
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+/* Estilos do formulário */
+form {
+    display: flex;
+    flex-direction: column;
+}
+
+label {
+    display: block;
+    text-align: left;
+    margin-top: 15px;
+    margin-bottom: 5px;
+    font-size: 16px;
+    color: #ffcc66;
+}
+
+input, textarea {
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 15px;
+    border: none;
+    border-radius: 8px;
+    background-color: #f2f2f2;
+    font-size: 16px;
+    box-sizing: border-box;
+}
+
+textarea {
+    height: 100px;
+    resize: vertical;
+}
+
+input[readonly] {
+    background-color: #e6e6e6;
+    color: #666;
+}
+
+.btn {
+    background-color: #ffcc66;
+    color: #007f7f;
+    font-size: 18px;
+    border: none;
+    border-radius: 10px;
+    padding: 15px 40px;
+    margin-top: 25px;
+    cursor: pointer;
+    transition: 0.3s;
+    font-weight: bold;
+}
+
+.btn:hover {
+    background-color: #ffb84d;
+}
+
+/* Estilos da lista de psicólogos */
+.search-bar {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 30px;
+}
+
+.search-bar input {
+    flex: 1;
+    padding: 12px;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+}
+
+.search-bar button {
+    background: #ffcc66;
+    color: #007f7f;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.psicologos-list {
+    margin-bottom: 20px;
+}
+
+.psicologo-card {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 15px;
+    padding: 20px;
+    margin-bottom: 20px;
+    border: 2px solid #ffcc66;
+}
+
+.psicologo-card h3 {
+    color: #ffcc66;
+    margin: 0 0 10px 0;
+}
+
+.psicologo-card p {
+    margin: 5px 0;
+}
+
+.agendar-btn {
+    background: #ffcc66;
+    color: #007f7f;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    margin-top: 10px;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.agendar-btn a {
+    text-decoration: none;
+    color: #007f7f;
+}
+
+.links {
+    margin-top: 25px;
+    text-align: center;
+}
+
+.links a {
+    color: #004466;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.links a:hover {
+    text-decoration: underline;
+}
+
+.loading {
+    text-align: center;
+    color: #ffcc66;
+    font-style: italic;
+}
