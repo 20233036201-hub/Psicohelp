@@ -160,6 +160,19 @@
             width: 100%;
             margin-top: 15px;
         }
+
+        .btn-logout {
+            background: #ff6b6b;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 10px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 10px;
+        }
     </style>
 </head>
 <body>
@@ -186,11 +199,17 @@
     <script>
         async function carregarPerfil() {
             try {
-                // 🎯 SIMPLES: Sempre mostra o usuário 1 (João)
-                const userId = 1;
+                console.log('🟡 Carregando perfil do usuário atual...');
                 
-                const response = await fetch(`/api/usuario/${userId}`);
+                const response = await fetch('/api/usuario/atual');
+                
+                if (!response.ok) {
+                    throw new Error(`Erro HTTP: ${response.status}`);
+                }
+                
                 const usuario = await response.json();
+                
+                console.log('🟢 Dados do usuário:', usuario);
                 
                 document.getElementById('profile-content').innerHTML = `
                     <div class="profile-card">
@@ -224,20 +243,45 @@
                                 <span class="info-label">🎯 Tipo:</span>
                                 <span class="info-value">${usuario.tipo === 'psicologo' ? '👨‍⚕️ Psicólogo' : '👤 Cliente'}</span>
                             </div>
+                            
+                            ${usuario.CRP ? `
+                            <div class="info-item">
+                                <span class="info-label">📄 CRP:</span>
+                                <span class="info-value">${usuario.CRP}</span>
+                            </div>
+                            ` : ''}
+                            
+                            ${usuario.especialidade ? `
+                            <div class="info-item">
+                                <span class="info-label">🎓 Especialidade:</span>
+                                <span class="info-value">${usuario.especialidade}</span>
+                            </div>
+                            ` : ''}
                         </div>
                         
-                        <button class="btn-editar" onclick="editarPerfil()">
-                            ✏️ Editar Perfil
+                        
+                        <button class="btn-logout" onclick="fazerLogout()">
+                            🚪 Sair da Conta
                         </button>
                     </div>
                 `;
                 
             } catch (error) {
-                console.error('Erro:', error);
+                console.error('❌ Erro ao carregar perfil:', error);
                 document.getElementById('profile-content').innerHTML = `
                     <div class="error">
                         <h3>❌ Erro ao carregar perfil</h3>
                         <p>${error.message}</p>
+                        <button onclick="carregarPerfil()" style="
+                            background: #ffcc66; 
+                            color: #007f7f; 
+                            border: none; 
+                            padding: 10px 20px; 
+                            border-radius: 8px; 
+                            margin-top: 15px; 
+                            cursor: pointer;">
+                            🔄 Tentar Novamente
+                        </button>
                     </div>
                 `;
             }
@@ -245,6 +289,18 @@
 
         function editarPerfil() {
             alert('Editar perfil em desenvolvimento!');
+            // Futuramente: window.location.href = '/editar-perfil';
+        }
+
+        function fazerLogout() {
+            if (confirm('Tem certeza que deseja sair?')) {
+                // Limpar dados de sessão/localStorage se existirem
+                localStorage.removeItem('userToken');
+                sessionStorage.removeItem('userData');
+                
+                // Redirecionar para login
+                window.location.href = '/';
+            }
         }
 
         // Carrega quando a página abre

@@ -3,17 +3,53 @@ const cors = require('cors');
 const path = require('path');
 const db = require('./config/db');
 const bcrypt = require('bcryptjs');
+const session = require('express-session');
+const cookieParser = require('cookie-parser');
 
 const app = express();
 const PORT = 3000;
 
 // ==================== MIDDLEWARES ====================
-app.use(cors());
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
+
+// Configurar sessões - SIMPLIFICADO (sem secure)
+// Configurar sessões - CORRIGIDO
+app.use(session({
+    secret: 'psychohelp-secret-key-2024',
+    resave: true, // ← ALTERE PARA true
+    saveUninitialized: true,
+    cookie: { 
+        maxAge: 24 * 60 * 60 * 1000, // 24 horas
+        httpOnly: true,
+        secure: false // ← ADICIONE PARA AMBIENTE DE DESENVOLVIMENTO
+    }
+}));
+
+// ADICIONE ESTE MIDDLEWARE PARA CORS COM CREDENCIAIS
+app.use(cors({
+    origin: true, // Permite qualquer origem em desenvolvimento
+    credentials: true // ← ISSO É IMPORTANTE!
+}));
+
+// Middleware para verificar sessão (opcional, para debug)
+app.use((req, res, next) => {
+    console.log('🔍 SESSÃO ATUAL:', {
+        userId: req.session.userId,
+        userType: req.session.userType,
+        sessionId: req.sessionID
+    });
+    next();
+});
 
 app.use((req, res, next) => {
-    res.setHeader('Cache-Control', 'no-cache');
+    console.log('🔍 SESSÃO ATUAL:', {
+        userId: req.session.userId,
+        userType: req.session.userType,
+        sessionId: req.sessionID
+    });
     next();
 });
 
@@ -27,7 +63,6 @@ app.use(express.static(path.join(__dirname, '..', '..', 'frontend')));
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, '..', '..', 'frontend', 'login', 'index.html'));
 });
-
 
 // HOME / FEED
 app.get('/home', (req, res) => {
@@ -128,7 +163,7 @@ app.post('/api/cadastro', async (req, res) => {
     }
 });
 
-// LOGIN
+// LOGIN - COM SESSÃO (ROTA ÚNICA)
 app.post('/api/login', async (req, res) => {
     const { email, senha } = req.body;
 
@@ -143,6 +178,17 @@ app.post('/api/login', async (req, res) => {
 
         if (!validPassword)
             return res.status(400).json({ error: 'Senha incorreta' });
+
+        // SALVAR NA SESSÃO
+        req.session.userId = user.id_usuario;
+        req.session.userType = user.tipo;
+        req.session.userName = user.nome;
+
+        console.log('🟢 Login realizado - Sessão criada:', {
+            userId: req.session.userId,
+            userType: req.session.userType,
+            userName: req.session.userName
+        });
 
         res.json({
             success: true,
@@ -160,6 +206,16 @@ app.post('/api/login', async (req, res) => {
         console.error('Erro no login:', error);
         res.status(500).json({ error: 'Erro interno do servidor' });
     }
+});
+
+// LOGOUT
+app.post('/api/logout', (req, res) => {
+    req.session.destroy((err) => {
+        if (err) {
+            return res.status(500).json({ error: 'Erro ao fazer logout' });
+        }
+        res.json({ success: true, message: 'Logout realizado com sucesso!' });
+    });
 });
 
 app.get('/api/psicologos', async (req, res) => {
@@ -202,8 +258,8 @@ app.post('/api/agendamentos', async (req, res) => {
     try {
         console.log('🟡 Novo agendamento:', { id_psicologo, data, horario, observacoes });
 
-        // ID temporário do cliente (depois pega da sessão)
-        const id_cliente = 1; // TEMPORÁRIO
+        // ID do cliente da sessão
+        const id_cliente = req.session.userId || 1; // Usa sessão ou fallback
 
         // Insere o agendamento SEM o campo "tipo"
         const [result] = await db.promise().query(
@@ -271,7 +327,72 @@ app.get('/api/minhas-consultas/:id', async (req, res) => {
     }
 });
 
-// PERFIL DO USUÁRIO
+// MINHAS CONSULTAS - USANDO SESSÃO
+app.get('/api/minhas-consultas', async (req, res) => {
+    try {
+        const userId = req.session.userId;
+        
+        if (!userId) {
+            return res.status(401).json({ error: 'Usuário não autenticado' });
+        }
+
+        console.log('🔵 Buscando consultas para usuário da sessão:', userId);
+
+        const [consultas] = await db.promise().query(`
+            SELECT 
+                c.id_consulta,
+                c.data_consulta,
+                c.horario,
+                c.observacoes,
+                c.status,
+                u.nome AS nome_psicologo,
+                p.especialidade,
+                p.telefone AS telefone_psicologo
+            FROM Consulta c
+            JOIN Psicologo p ON c.id_psicologo = p.id_psicologo
+            JOIN Usuario u ON p.id_usuario = u.id_usuario
+            WHERE c.id_cliente = ?
+            ORDER BY c.data_consulta DESC, c.horario DESC
+        `, [userId]);
+
+        console.log('🟢 Consultas encontradas:', consultas.length);
+        
+        res.json(consultas);
+
+    } catch (error) {
+        console.error('🔴 Erro ao buscar consultas:', error);
+        res.status(500).json({ error: 'Erro interno' });
+    }
+});
+
+// ROTA PARA OBTER USUÁRIO ATUAL (COM SESSÃO)
+app.get('/api/usuario/atual', async (req, res) => {
+    try {
+        if (!req.session.userId) {
+            return res.status(401).json({ error: 'Usuário não autenticado' });
+        }
+
+        console.log('🔵 Buscando usuário da sessão:', req.session.userId);
+
+        const [users] = await db.promise().query(`
+            SELECT u.*, p.CRP, p.especialidade, p.telefone
+            FROM Usuario u
+            LEFT JOIN Psicologo p ON u.id_usuario = p.id_usuario
+            WHERE u.id_usuario = ?
+        `, [req.session.userId]);
+
+        if (users.length === 0)
+            return res.status(404).json({ error: 'Usuário não encontrado' });
+
+        res.json(users[0]);
+
+    } catch (error) {
+        console.error('Erro ao buscar usuário:', error);
+        res.status(500).json({ error: 'Erro interno' });
+    }
+});
+
+// PERFIL DO USUÁRIO POR ID (para compatibilidade)
 app.get('/api/usuario/:id', async (req, res) => {
     try {
         const userId = req.params.id;
@@ -298,11 +419,20 @@ app.get('/api/usuario/:id', async (req, res) => {
 app.get('/api/feed', async (req, res) => {
     try {
         const [posts] = await db.promise().query(`
-            SELECT r.*, u.nome AS nome_cliente
+            SELECT 
+                r.*, 
+                u.nome AS nome_cliente,
+                u.id_usuario  -- 🔥 ADICIONE ISSO PARA DEBUG
             FROM relato r
-            JOIN usuario u ON r.id_cliente = u.id_usuario
+            JOIN Cliente c ON r.id_cliente = c.id_cliente  -- 🔥 CORRIGI: JOIN com Cliente primeiro
+            JOIN Usuario u ON c.id_usuario = u.id_usuario  -- 🔥 DEPOIS com Usuario
             ORDER BY r.data_postagem DESC
         `);
+
+        console.log('🔵 Posts carregados:', posts.length);
+        posts.forEach(post => {
+            console.log(`📝 Post ${post.id_relato}: "${post.titulo}" por ${post.nome_cliente} (usuário: ${post.id_usuario})`);
+        });
 
         res.json(posts);
 
@@ -311,39 +441,87 @@ app.get('/api/feed', async (req, res) => {
         res.status(500).json({ error: 'Erro interno' });
     }
 });
-
 // FEED – CRIAR POST - CORRIGIDO
 app.post('/api/feed/post', async (req, res) => {
     try {
         const { titulo, conteudo } = req.body;
-        const id_cliente = 1; // temporário
+        const id_usuario = req.session.userId;
 
-        console.log('🟡 Criando novo post:', { titulo, conteudo });
+        console.log('🟡 Tentando criar post - Sessão:', {
+            userId: req.session.userId,
+            userType: req.session.userType,
+            sessionId: req.sessionID
+        });
 
-        const [result] = await db.promise().query(
+        if (!id_usuario) {
+            console.log('🔴 Usuário não autenticado na sessão');
+            return res.status(401).json({ error: 'Usuário não autenticado' });
+        }
+
+        console.log('🟡 Criando novo post para usuário:', id_usuario);
+
+        // 🔥 CORREÇÃO: Buscar o ID do cliente CORRETAMENTE
+        const [cliente] = await db.promise().query(`
+            SELECT c.id_cliente 
+            FROM Cliente c 
+            WHERE c.id_usuario = ?
+        `, [id_usuario]);
+
+        let id_cliente;
+
+        if (cliente.length === 0) {
+            // Criar registro se não existir
+            const [result] = await db.promise().query(
+                'INSERT INTO Cliente (id_usuario) VALUES (?)',
+                [id_usuario]
+            );
+            id_cliente = result.insertId;
+            console.log('🟢 NOVO cliente criado com ID:', id_cliente, 'para usuário:', id_usuario);
+        } else {
+            id_cliente = cliente[0].id_cliente;
+            console.log('🟢 Cliente encontrado com ID:', id_cliente, 'para usuário:', id_usuario);
+            
+            // 🔥 VERIFICAÇÃO EXTRA: Confirmar que é o cliente correto
+            const [verificacao] = await db.promise().query(
+                'SELECT id_usuario FROM Cliente WHERE id_cliente = ?',
+                [id_cliente]
+            );
+            if (verificacao.length > 0) {
+                console.log('🔍 Verificação: Cliente', id_cliente, 'pertence ao usuário:', verificacao[0].id_usuario);
+            }
+        }
+
+        // Criar o post
+        const [postResult] = await db.promise().query(
             'INSERT INTO relato (id_cliente, titulo, conteudo, data_postagem, curtidas) VALUES (?, ?, ?, NOW(), 0)',
             [id_cliente, titulo, conteudo]
         );
 
-        console.log('🟢 Post criado com ID:', result.insertId);
+        console.log('🟢 Post criado com ID:', postResult.insertId, 'para cliente:', id_cliente);
         
         res.json({ 
             success: true, 
-            id_relato: result.insertId,
+            id_relato: postResult.insertId,
             message: 'Post criado com sucesso!'
         });
 
     } catch (error) {
         console.error('🔴 Erro ao criar post:', error);
-        res.status(500).json({ error: 'Erro interno' });
+        res.status(500).json({ 
+            error: 'Erro interno',
+            details: error.message 
+        });
     }
 });
-
-// FEED – CURTIR / DESCURTIR
+// FEED – CURTIR / DESCURTIR - CORRIGIDA
 app.post('/api/feed/curtir', async (req, res) => {
     try {
         const { id_relato } = req.body;
-        const id_usuario = 1;
+        const id_usuario = req.session.userId;
+
+        if (!id_usuario) {
+            return res.status(401).json({ error: 'Usuário não autenticado' });
+        }
 
         const [jaCurtiu] = await db.promise().query(
             'SELECT * FROM curtida WHERE id_relato = ? AND id_usuario = ?',
@@ -377,6 +555,18 @@ app.post('/api/feed/curtir', async (req, res) => {
         res.status(500).json({ error: 'Erro interno' });
     }
 });
+app.get('/api/debug-session', (req, res) => {
+    res.json({
+        session: req.session,
+        sessionId: req.sessionID,
+        headers: req.headers
+    });
+});
+// ==================== MIDDLEWARE DE DEBUG ====================
+app.use((req, res, next) => {
+    console.log('🔍 SESSÃO ATUAL:', req.session);
+    next();
+});
 
 // ==================== START SERVER ====================
 db.connect((error) => {
@@ -391,4 +581,5 @@ app.listen(PORT, '0.0.0.0', () => {
     console.log(`🚀 Servidor rodando na porta ${PORT}`);
     console.log(`📍 Local: http://localhost:${PORT}`);
     console.log(`📍 Rede: http://192.168.3.140:${PORT}`);
+    console.log('🔐 Sistema de sessão ativado');
 });
