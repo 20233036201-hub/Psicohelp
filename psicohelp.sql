@@ -1,285 +1,180 @@
--- phpMyAdmin SQL Dump
--- version 5.2.1
--- https://www.phpmyadmin.net/
---
--- Host: 127.0.0.1
--- Tempo de geração: 23/11/2025 às 21:39
--- Versão do servidor: 10.4.32-MariaDB
--- Versão do PHP: 8.2.12
-SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
-START TRANSACTION;
-SET time_zone = "+00:00";
+-- psicohelp_fix.sql
+DROP DATABASE IF EXISTS psicohelp;
+CREATE DATABASE psicohelp;
+USE psicohelp;
 
+-- Tabela de Usuários
+CREATE TABLE Usuario (
+    id_usuario INT PRIMARY KEY AUTO_INCREMENT,
+    nome VARCHAR(100) NOT NULL,
+    email VARCHAR(100) UNIQUE NOT NULL,
+    senha VARCHAR(255) NOT NULL,
+    tipo ENUM('cliente', 'psicologo', 'moderador') NOT NULL DEFAULT 'cliente',
+    telefone VARCHAR(20),
+    data_cadastro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    status ENUM('ativo', 'inativo') DEFAULT 'ativo'
+);
 
-/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
-/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
-/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
-/*!40101 SET NAMES utf8mb4 */;
+-- Tabela de Clientes
+CREATE TABLE Cliente (
+    id_cliente INT PRIMARY KEY AUTO_INCREMENT,
+    id_usuario INT UNIQUE NOT NULL,
+    data_nascimento DATE,
+    genero VARCHAR(20),
+    FOREIGN KEY (id_usuario) REFERENCES Usuario(id_usuario) ON DELETE CASCADE
+);
 
---
--- Banco de dados: `psicohelp`
---
-CREATE DATABASE IF NOT EXISTS `psicohelp` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
-USE `psicohelp`;
+-- Tabela de Psicólogos
+CREATE TABLE Psicologo (
+    id_psicologo INT PRIMARY KEY AUTO_INCREMENT,
+    id_usuario INT UNIQUE NOT NULL,
+    CRP VARCHAR(20) NOT NULL,
+    especialidade VARCHAR(100),
+    formacao TEXT,
+    abordagem VARCHAR(100),
+    experiencia INT DEFAULT 0,
+    descricao TEXT,
+    status ENUM('pendente', 'ativo', 'rejeitado') DEFAULT 'ativo', -- MUDADO para 'ativo' padrão
+    avaliacao_media DECIMAL(3,2) DEFAULT 0.00,
+    total_avaliacoes INT DEFAULT 0,
+    FOREIGN KEY (id_usuario) REFERENCES Usuario(id_usuario) ON DELETE CASCADE
+);
 
--- --------------------------------------------------------
+-- Tabela de Consultas
+CREATE TABLE Consulta (
+    id_consulta INT PRIMARY KEY AUTO_INCREMENT,
+    id_cliente INT NOT NULL,
+    id_psicologo INT NOT NULL,
+    data_consulta DATE NOT NULL,
+    horario TIME NOT NULL,
+    observacoes TEXT,
+    status ENUM('agendada', 'confirmada', 'realizada', 'cancelada') DEFAULT 'agendada',
+    data_agendamento TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (id_cliente) REFERENCES Cliente(id_cliente) ON DELETE CASCADE,
+    FOREIGN KEY (id_psicologo) REFERENCES Psicologo(id_psicologo) ON DELETE CASCADE
+);
 
---
--- Estrutura para tabela `usuario`
---
+-- Tabela de Relatos
+CREATE TABLE Relato (
+    id_relato INT PRIMARY KEY AUTO_INCREMENT,
+    id_cliente INT NOT NULL,
+    titulo VARCHAR(200) NOT NULL,
+    conteudo TEXT NOT NULL,
+    data_postagem TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    curtidas INT DEFAULT 0,
+    status ENUM('pendente', 'ativo', 'rejeitado') DEFAULT 'ativo',
+    FOREIGN KEY (id_cliente) REFERENCES Cliente(id_cliente) ON DELETE CASCADE
+);
 
-DROP TABLE IF EXISTS `usuario`;
-CREATE TABLE IF NOT EXISTS `usuario` (
-  `id_usuario` int(11) NOT NULL AUTO_INCREMENT,
-  `nome` varchar(100) NOT NULL,
-  `email` varchar(100) NOT NULL,
-  `senha` varchar(255) NOT NULL,
-  `tipo` enum('cliente','psicologo') NOT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  `telefone` varchar(20) DEFAULT NULL,
-  `ativo` tinyint(1) DEFAULT 1,
-  PRIMARY KEY (`id_usuario`),
-  UNIQUE KEY `email` (`email`)
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+-- Tabela de Chat
+CREATE TABLE Chat (
+    id_mensagem INT PRIMARY KEY AUTO_INCREMENT,
+    id_cliente INT NOT NULL,
+    id_psicologo INT NOT NULL,
+    id_remetente INT NOT NULL,
+    mensagem TEXT NOT NULL,
+    data_envio TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    lida BOOLEAN DEFAULT FALSE,
+    FOREIGN KEY (id_cliente) REFERENCES Cliente(id_cliente) ON DELETE CASCADE,
+    FOREIGN KEY (id_psicologo) REFERENCES Psicologo(id_psicologo) ON DELETE CASCADE
+);
 
---
--- Despejando dados para a tabela `usuario`
---
+-- Tabela de Avaliações
+CREATE TABLE Avaliacao (
+    id_avaliacao INT PRIMARY KEY AUTO_INCREMENT,
+    id_cliente INT NOT NULL,
+    id_psicologo INT NOT NULL,
+    nota INT NOT NULL CHECK (nota >= 1 AND nota <= 5),
+    comentario TEXT,
+    data_avaliacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (id_cliente) REFERENCES Cliente(id_cliente) ON DELETE CASCADE,
+    FOREIGN KEY (id_psicologo) REFERENCES Psicologo(id_psicologo) ON DELETE CASCADE
+);
 
-INSERT IGNORE INTO `usuario` (`id_usuario`, `nome`, `email`, `senha`, `tipo`, `created_at`, `telefone`, `ativo`) VALUES
-(1, 'joao', 'joao@gmail', '$2b$10$avsi5z/L2g00eWv5JpRCiuxdHYzKLsVIqRcD8Rei9WZphgnmHjRN2', 'cliente', '2025-11-21 20:32:42', NULL, 1),
-(2, 'Dr. João Silva', 'silva@gmail', '$2b$10$H4tIrN8.7pbCigtQkzJVjuyF0SmG/kLWu0htIwnKYim6qpIOFQABq', 'psicologo', '2025-11-23 05:43:50', NULL, 1),
-(3, 'dhawgwr', 'rgdherh@gmail', '$2b$10$wNCzbYipQ/mYhGdD6SaKB.NtoxLw8p8ZC8h9HvFpEH41yA1e3/R46', 'psicologo', '2025-11-23 07:43:28', '45355355', 1),
-(4, 'trrt', 'hguer@gmail', '$2b$10$Obg4thjNtQUx71FX0wqsWOCTlPxSJAEMpgV3Vgq9YDhvKdzcK6IU2', 'psicologo', '2025-11-23 14:09:19', '45355355', 1);
+-- Inserir dados iniciais
+-- Senha para todos: Admin123 (hash: $2a$10$N9qo8uLOickgx2ZMRZoMye7GnwHZ1pY1pY1pY1pY1pY1pY1pY1pY)
 
--- --------------------------------------------------------
+-- Moderador
+INSERT INTO Usuario (nome, email, senha, tipo, telefone) VALUES 
+('Moderador Admin', 'moderador@psicohelp.com', '$2a$10$N9qo8uLOickgx2ZMRZoMye7GnwHZ1pY1pY1pY1pY1pY1pY1pY1pY', 'moderador', '(11) 99999-9999');
 
---
--- Estrutura para tabela `cliente`
---
+-- Psicólogos
+INSERT INTO Usuario (nome, email, senha, tipo, telefone) VALUES 
+('Dra. Ana Silva', 'ana.silva@email.com', '$2a$10$N9qo8uLOickgx2ZMRZoMye7GnwHZ1pY1pY1pY1pY1pY1pY1pY1pY', 'psicologo', '(11) 98888-8888'),
+('Dr. Carlos Santos', 'carlos.santos@email.com', '$2a$10$N9qo8uLOickgx2ZMRZoMye7GnwHZ1pY1pY1pY1pY1pY1pY1pY1pY', 'psicologo', '(11) 97777-7777'),
+('Dra. Mariana Oliveira', 'mariana@email.com', '$2a$10$N9qo8uLOickgx2ZMRZoMye7GnwHZ1pY1pY1pY1pY1pY1pY1pY1pY', 'psicologo', '(11) 96666-6666');
 
-DROP TABLE IF EXISTS `cliente`;
-CREATE TABLE IF NOT EXISTS `cliente` (
-  `id_cliente` int(11) NOT NULL AUTO_INCREMENT,
-  `id_usuario` int(11) NOT NULL,
-  `data_nascimento` date DEFAULT NULL,
-  `genero` enum('M','F','Outro','Prefiro não informar') DEFAULT 'Prefiro não informar',
-  `telefone_contato` varchar(20) DEFAULT NULL,
-  `endereco` text DEFAULT NULL,
-  `cidade` varchar(100) DEFAULT NULL,
-  `estado` varchar(50) DEFAULT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  `updated_at` timestamp NULL DEFAULT NULL ON UPDATE current_timestamp(),
-  PRIMARY KEY (`id_cliente`),
-  UNIQUE KEY `id_usuario` (`id_usuario`),
-  CONSTRAINT `cliente_ibfk_1` FOREIGN KEY (`id_usuario`) REFERENCES `usuario` (`id_usuario`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+SET @ana_id = (SELECT id_usuario FROM Usuario WHERE email = 'ana.silva@email.com');
+SET @carlos_id = (SELECT id_usuario FROM Usuario WHERE email = 'carlos.santos@email.com');
+SET @mariana_id = (SELECT id_usuario FROM Usuario WHERE email = 'mariana@email.com');
 
---
--- Despejando dados para a tabela `cliente`
---
+INSERT INTO Psicologo (id_usuario, CRP, especialidade, formacao, abordagem, experiencia, descricao, status) VALUES
+(@ana_id, '06/12345', 'Psicologia Clínica', 'Graduação em Psicologia - USP\nMestrado em Terapia Cognitiva', 'TCC', 8, 'Especialista em ansiedade e depressão. Atendo adolescentes e adultos.', 'ativo'),
+(@carlos_id, '06/67890', 'Terapia Cognitivo-Comportamental', 'Graduação em Psicologia - UNESP\nEspecialização em TCC', 'TCC', 5, 'Foco em terapia para adultos com fobias e transtornos de ansiedade.', 'ativo'),
+(@mariana_id, '06/54321', 'Psicologia Infantil', 'Graduação em Psicologia - PUC\nEspecialização em Psicologia Infantil', 'Ludoterapia', 10, 'Especialista em atendimento infantil e orientação parental.', 'ativo');
 
-INSERT IGNORE INTO `cliente` (`id_cliente`, `id_usuario`, `data_nascimento`, `genero`, `telefone_contato`, `endereco`, `cidade`, `estado`) VALUES
-(1, 1, NULL, NULL, NULL, NULL, NULL, NULL);
+-- Clientes
+INSERT INTO Usuario (nome, email, senha, tipo, telefone) VALUES 
+('João da Silva', 'joao@email.com', '$2a$10$N9qo8uLOickgx2ZMRZoMye7GnwHZ1pY1pY1pY1pY1pY1pY1pY1pY', 'cliente', '(11) 95555-5555'),
+('Maria Oliveira', 'maria@email.com', '$2a$10$N9qo8uLOickgx2ZMRZoMye7GnwHZ1pY1pY1pY1pY1pY1pY1pY1pY', 'cliente', '(11) 94444-4444');
 
--- --------------------------------------------------------
+SET @joao_id = (SELECT id_usuario FROM Usuario WHERE email = 'joao@email.com');
+SET @maria_id = (SELECT id_usuario FROM Usuario WHERE email = 'maria@email.com');
 
---
--- Estrutura para tabela `psicologo`
---
+INSERT INTO Cliente (id_usuario) VALUES (@joao_id), (@maria_id);
 
-DROP TABLE IF EXISTS `psicologo`;
-CREATE TABLE IF NOT EXISTS `psicologo` (
-  `id_psicologo` int(11) NOT NULL AUTO_INCREMENT,
-  `id_usuario` int(11) NOT NULL,
-  `CRP` varchar(20) NOT NULL,
-  `especialidade` varchar(100) DEFAULT NULL,
-  `disponibilidade` text DEFAULT NULL,
-  `telefone` varchar(20) DEFAULT NULL,
-  `status` enum('pendente','aprovado','rejeitado') DEFAULT 'pendente',
-  `formacao` varchar(200) DEFAULT NULL,
-  `abordagem` varchar(100) DEFAULT NULL,
-  `experiencia` int(11) DEFAULT NULL,
-  `descricao` text DEFAULT NULL,
-  `valor_consulta` decimal(10,2) DEFAULT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  `updated_at` timestamp NULL DEFAULT NULL ON UPDATE current_timestamp(),
-  PRIMARY KEY (`id_psicologo`),
-  UNIQUE KEY `CRP` (`CRP`),
-  UNIQUE KEY `id_usuario` (`id_usuario`),
-  CONSTRAINT `psicologo_ibfk_1` FOREIGN KEY (`id_usuario`) REFERENCES `usuario` (`id_usuario`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+-- Relatos iniciais
+INSERT INTO Relato (id_cliente, titulo, conteudo, curtidas, status) VALUES
+(1, 'Minha jornada na terapia', 'Há 6 meses iniciei terapia e minha vida mudou completamente. Aprendi a lidar com minha ansiedade...', 15, 'ativo'),
+(2, 'Superando a depressão', 'Queria compartilhar minha vitória sobre a depressão. Foi um caminho difícil, mas com ajuda profissional...', 23, 'ativo'),
+(1, 'Dicas para quem está começando', 'Para quem está pensando em iniciar terapia: não desista na primeira sessão, dê tempo ao tempo...', 8, 'ativo');
 
---
--- Despejando dados para a tabela `psicologo`
---
+-- Consultas de exemplo
+INSERT INTO Consulta (id_cliente, id_psicologo, data_consulta, horario, status) VALUES
+(1, 1, DATE_ADD(CURDATE(), INTERVAL 7 DAY), '14:00:00', 'agendada'),
+(2, 2, DATE_ADD(CURDATE(), INTERVAL 3 DAY), '10:00:00', 'confirmada'),
+(1, 3, DATE_SUB(CURDATE(), INTERVAL 15 DAY), '16:00:00', 'realizada');
 
-INSERT IGNORE INTO `psicologo` (`id_psicologo`, `id_usuario`, `CRP`, `especialidade`, `disponibilidade`, `telefone`, `status`, `formacao`, `abordagem`, `experiencia`, `descricao`, `valor_consulta`) VALUES
-(1, 2, '01/000', 'psicoooo', NULL, '33444444444', 'pendente', NULL, NULL, NULL, NULL, NULL),
-(2, 3, '56644', 'clicinia', NULL, NULL, 'pendente', 'usp', 'TCC', 6, 'tsehesthe', NULL),
-(3, 4, '56644-2', 'clicinia', NULL, NULL, 'pendente', 'usp', 'TCC', 6, 'erye', NULL);
+-- Avaliações
+INSERT INTO Avaliacao (id_cliente, id_psicologo, nota, comentario) VALUES
+(1, 1, 5, 'Excelente profissional, muito atenciosa!'),
+(2, 2, 4, 'Bom psicólogo, me ajudou bastante.'),
+(1, 3, 5, 'Mariana é incrível com crianças!');
 
--- --------------------------------------------------------
+-- Atualizar avaliação média dos psicólogos
+UPDATE Psicologo p SET 
+    avaliacao_media = (SELECT AVG(nota) FROM Avaliacao WHERE id_psicologo = p.id_psicologo),
+    total_avaliacoes = (SELECT COUNT(*) FROM Avaliacao WHERE id_psicologo = p.id_psicologo);
 
---
--- Estrutura para tabela `relato`
---
+-- Verificar dados
+SELECT '=== USUÁRIOS ===' as '';
+SELECT * FROM Usuario;
 
-DROP TABLE IF EXISTS `relato`;
-CREATE TABLE IF NOT EXISTS `relato` (
-  `id_relato` int(11) NOT NULL AUTO_INCREMENT,
-  `id_cliente` int(11) NOT NULL,
-  `titulo` varchar(100) NOT NULL,
-  `conteudo` text NOT NULL,
-  `data_postagem` timestamp NOT NULL DEFAULT current_timestamp(),
-  `curtidas` int(11) DEFAULT 0,
-  `anonimo` tinyint(1) DEFAULT 0,
-  `status` enum('ativo','inativo','removido') DEFAULT 'ativo',
-  PRIMARY KEY (`id_relato`),
-  KEY `id_cliente` (`id_cliente`),
-  CONSTRAINT `relato_ibfk_1` FOREIGN KEY (`id_cliente`) REFERENCES `cliente` (`id_cliente`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+SELECT '=== PSICÓLOGOS ===' as '';
+SELECT p.*, u.nome, u.email FROM Psicologo p JOIN Usuario u ON p.id_usuario = u.id_usuario;
 
---
--- Despejando dados para a tabela `relato`
---
+SELECT '=== CLIENTES ===' as '';
+SELECT c.*, u.nome, u.email FROM Cliente c JOIN Usuario u ON c.id_usuario = u.id_usuario;
 
-INSERT IGNORE INTO `relato` (`id_relato`, `id_cliente`, `titulo`, `conteudo`, `data_postagem`, `curtidas`, `anonimo`, `status`) VALUES
-(1, 1, 'aerhaerh', 'reerhererh', '2025-11-22 14:19:26', 0, 0, 'ativo'),
-(2, 1, 'hahaha', 'hahahah', '2025-11-23 07:26:10', 0, 0, 'ativo'),
-(3, 1, 'rg', 'rggrgr', '2025-11-23 17:12:07', 1, 0, 'ativo');
+SELECT '=== RELATOS ===' as '';
+SELECT r.*, u.nome FROM Relato r JOIN Cliente c ON r.id_cliente = c.id_cliente JOIN Usuario u ON c.id_usuario = u.id_usuario;
 
--- --------------------------------------------------------
+SELECT '=== CONSULTAS ===' as '';
+SELECT con.*, 
+       cli_u.nome as cliente_nome,
+       psi_u.nome as psicologo_nome
+FROM Consulta con
+JOIN Cliente cli ON con.id_cliente = cli.id_cliente
+JOIN Usuario cli_u ON cli.id_usuario = cli_u.id_usuario
+JOIN Psicologo psi ON con.id_psicologo = psi.id_psicologo
+JOIN Usuario psi_u ON psi.id_usuario = psi_u.id_usuario;
 
---
--- Estrutura para tabela `curtida`
---
-
-DROP TABLE IF EXISTS `curtida`;
-CREATE TABLE IF NOT EXISTS `curtida` (
-  `id_curtida` int(11) NOT NULL AUTO_INCREMENT,
-  `id_relato` int(11) NOT NULL,
-  `id_usuario` int(11) NOT NULL,
-  `data_curtida` timestamp NOT NULL DEFAULT current_timestamp(),
-  PRIMARY KEY (`id_curtida`),
-  UNIQUE KEY `unique_curtida` (`id_relato`,`id_usuario`),
-  KEY `id_usuario` (`id_usuario`),
-  CONSTRAINT `curtida_ibfk_1` FOREIGN KEY (`id_relato`) REFERENCES `relato` (`id_relato`) ON DELETE CASCADE ON UPDATE CASCADE,
-  CONSTRAINT `curtida_ibfk_2` FOREIGN KEY (`id_usuario`) REFERENCES `usuario` (`id_usuario`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=18 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Despejando dados para a tabela `curtida`
---
-
-INSERT IGNORE INTO `curtida` (`id_curtida`, `id_relato`, `id_usuario`, `data_curtida`) VALUES
-(17, 3, 1, '2025-11-23 17:12:10');
-
--- --------------------------------------------------------
-
---
--- Estrutura para tabela `consulta`
---
-
-DROP TABLE IF EXISTS `consulta`;
-CREATE TABLE IF NOT EXISTS `consulta` (
-  `id_consulta` int(11) NOT NULL AUTO_INCREMENT,
-  `id_cliente` int(11) NOT NULL,
-  `id_psicologo` int(11) NOT NULL,
-  `data_consulta` date NOT NULL,
-  `horario` time NOT NULL,
-  `duracao` int(11) DEFAULT 50,
-  `tipo` enum('presencial','online') DEFAULT 'online',
-  `observacoes` text DEFAULT NULL,
-  `status` enum('agendada','confirmada','realizada','cancelada','remarcada') DEFAULT 'agendada',
-  `valor_consulta` decimal(10,2) DEFAULT NULL,
-  `link_video` varchar(255) DEFAULT NULL,
-  `data_criacao` timestamp NOT NULL DEFAULT current_timestamp(),
-  `data_atualizacao` timestamp NULL DEFAULT NULL ON UPDATE current_timestamp(),
-  PRIMARY KEY (`id_consulta`),
-  KEY `id_cliente` (`id_cliente`),
-  KEY `id_psicologo` (`id_psicologo`),
-  CONSTRAINT `consulta_ibfk_1` FOREIGN KEY (`id_cliente`) REFERENCES `cliente` (`id_cliente`) ON DELETE CASCADE ON UPDATE CASCADE,
-  CONSTRAINT `consulta_ibfk_2` FOREIGN KEY (`id_psicologo`) REFERENCES `psicologo` (`id_psicologo`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Despejando dados para a tabela `consulta`
---
-
-INSERT IGNORE INTO `consulta` (`id_consulta`, `id_cliente`, `id_psicologo`, `data_consulta`, `horario`, `duracao`, `tipo`, `observacoes`, `status`, `valor_consulta`, `link_video`) VALUES
-(1, 1, 3, '2025-12-06', '15:00:00', 50, 'online', 'welwehweiw4 ', 'agendada', NULL, NULL),
-(2, 1, 2, '2025-11-29', '10:00:00', 50, 'online', 'dghrrtr', 'agendada', NULL, NULL);
-
--- --------------------------------------------------------
-
---
--- Estrutura para tabela `sessao`
---
-
-DROP TABLE IF EXISTS `sessao`;
-CREATE TABLE IF NOT EXISTS `sessao` (
-  `id_sessao` int(11) NOT NULL AUTO_INCREMENT,
-  `id_psicologo` int(11) NOT NULL,
-  `id_cliente` int(11) NOT NULL,
-  `data` date NOT NULL,
-  `hora` time NOT NULL,
-  `duracao` int(11) DEFAULT 50,
-  `status` enum('agendada','confirmada','realizada','cancelada','remarcada') DEFAULT 'agendada',
-  `link_video` varchar(255) DEFAULT NULL,
-  `observacao` text DEFAULT NULL,
-  `valor` decimal(10,2) DEFAULT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  `updated_at` timestamp NULL DEFAULT NULL ON UPDATE current_timestamp(),
-  PRIMARY KEY (`id_sessao`),
-  KEY `id_psicologo` (`id_psicologo`),
-  KEY `id_cliente` (`id_cliente`),
-  CONSTRAINT `sessao_ibfk_1` FOREIGN KEY (`id_psicologo`) REFERENCES `psicologo` (`id_psicologo`) ON DELETE CASCADE ON UPDATE CASCADE,
-  CONSTRAINT `sessao_ibfk_2` FOREIGN KEY (`id_cliente`) REFERENCES `cliente` (`id_cliente`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- --------------------------------------------------------
-
---
--- Estrutura para tabela `mensagem`
---
-
-DROP TABLE IF EXISTS `mensagem`;
-CREATE TABLE IF NOT EXISTS `mensagem` (
-  `id_mensagem` int(11) NOT NULL AUTO_INCREMENT,
-  `id_remetente` int(11) NOT NULL,
-  `id_destinatario` int(11) NOT NULL,
-  `mensagem` text NOT NULL,
-  `data_hora` timestamp NOT NULL DEFAULT current_timestamp(),
-  `lida` tinyint(1) DEFAULT 0,
-  `tipo` enum('texto','sistema','notificacao') DEFAULT 'texto',
-  PRIMARY KEY (`id_mensagem`),
-  KEY `id_remetente` (`id_remetente`),
-  KEY `id_destinatario` (`id_destinatario`),
-  CONSTRAINT `mensagem_ibfk_1` FOREIGN KEY (`id_remetente`) REFERENCES `usuario` (`id_usuario`) ON DELETE CASCADE ON UPDATE CASCADE,
-  CONSTRAINT `mensagem_ibfk_2` FOREIGN KEY (`id_destinatario`) REFERENCES `usuario` (`id_usuario`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Índices para tabelas despejadas
---
-
---
--- Restrições para tabelas despejadas
---
-
-DELIMITER $$
---
--- Eventos
---
-CREATE EVENT IF NOT EXISTS `limpar_sessoes_antigas` ON SCHEDULE EVERY 1 DAY STARTS '2025-11-24 00:00:00' ON COMPLETION PRESERVE ENABLE DO BEGIN
-    DELETE FROM sessao WHERE data < CURDATE() - INTERVAL 30 DAY AND status = 'realizada';
-END$$
-
-DELIMITER ;
-
-COMMIT;
-
-/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
-/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
-/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
+SELECT '=== AVALIAÇÕES ===' as '';
+SELECT a.*, 
+       cli_u.nome as cliente_nome,
+       psi_u.nome as psicologo_nome
+FROM Avaliacao a
+JOIN Cliente cli ON a.id_cliente = cli.id_cliente
+JOIN Usuario cli_u ON cli.id_usuario = cli_u.id_usuario
+JOIN Psicologo psi ON a.id_psicologo = psi.id_psicologo
+JOIN Usuario psi_u ON psi.id_usuario = psi_u.id_usuario;

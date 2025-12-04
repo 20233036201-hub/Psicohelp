@@ -1,0 +1,604 @@
+<!-- frontend/chat/index.html -->
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat - PsicoHelp</title>
+    <link rel="stylesheet" href="../style.css">
+    <style>
+        .container {
+            max-width: 800px;
+            margin: 30px auto;
+            padding: 30px;
+            padding-bottom: 100px;
+            display: flex;
+            flex-direction: column;
+            height: calc(100vh - 160px);
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .header h2 {
+            color: #ffcc66;
+            font-size: 1.8em;
+            margin-bottom: 10px;
+        }
+        
+        .chat-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            border: 2px solid #ffcc66;
+        }
+        
+        .messages-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 15px;
+            margin-bottom: 20px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+        }
+        
+        .message {
+            margin-bottom: 15px;
+            max-width: 70%;
+            padding: 12px 15px;
+            border-radius: 15px;
+            position: relative;
+        }
+        
+        .message.sent {
+            background: #ffcc66;
+            color: #007f7f;
+            margin-left: auto;
+            border-bottom-right-radius: 5px;
+        }
+        
+        .message.received {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            margin-right: auto;
+            border-bottom-left-radius: 5px;
+        }
+        
+        .message-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+            font-size: 0.85em;
+        }
+        
+        .message-sender {
+            font-weight: bold;
+        }
+        
+        .message-time {
+            opacity: 0.7;
+        }
+        
+        .message-content {
+            word-wrap: break-word;
+        }
+        
+        .input-area {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .input-area textarea {
+            flex: 1;
+            padding: 12px;
+            border-radius: 10px;
+            border: 2px solid #ffcc66;
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+            resize: none;
+            min-height: 60px;
+            font-family: inherit;
+        }
+        
+        .input-area button {
+            background: #ffcc66;
+            color: #007f7f;
+            border: none;
+            border-radius: 10px;
+            padding: 0 25px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .input-area button:hover {
+            background: #ffaa33;
+            transform: translateY(-2px);
+        }
+        
+        .input-area button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .no-chat {
+            text-align: center;
+            padding: 50px;
+            color: rgba(255, 255, 255, 0.7);
+        }
+        
+        .chat-list {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+        
+        .chat-item {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-left: 3px solid #ffcc66;
+        }
+        
+        .chat-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateX(5px);
+        }
+        
+        .chat-item h3 {
+            color: #ffcc66;
+            margin-bottom: 5px;
+        }
+        
+        .chat-item p {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.9em;
+        }
+        
+        .fixed-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0, 127, 127, 0.95);
+            display: flex;
+            justify-content: space-around;
+            padding: 15px;
+            border-top: 3px solid #ffcc66;
+            backdrop-filter: blur(10px);
+            z-index: 100;
+        }
+        
+        .fixed-nav button {
+            background: #ffcc66;
+            color: #007f7f;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 10px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-width: 80px;
+        }
+        
+        .fixed-nav button:hover {
+            background: #ffaa33;
+            transform: translateY(-2px);
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 30px;
+            color: #ffcc66;
+        }
+        
+        .loading::after {
+            content: '';
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 204, 102, 0.3);
+            border-top-color: #ffcc66;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-left: 10px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .error-message {
+            background: rgba(255, 107, 107, 0.2);
+            border: 2px solid #ff6b6b;
+            color: #ffcccc;
+            padding: 12px;
+            border-radius: 8px;
+            margin: 10px 0;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h2>💬 Chat com Psicólogos</h2>
+            <p>Converse com seu psicólogo entre as sessões</p>
+        </div>
+        
+        <div id="chat-selector">
+            <div class="loading">Carregando suas conversas...</div>
+        </div>
+        
+        <div id="chat-active" style="display: none;">
+            <div class="chat-container">
+                <div id="chat-header">
+                    <h3 style="color: #ffcc66; margin-bottom: 15px;">Conversando com <span id="psicologo-name"></span></h3>
+                </div>
+                
+                <div class="messages-area" id="messages-area">
+                    <div class="loading">Carregando mensagens...</div>
+                </div>
+                
+                <div class="input-area">
+                    <textarea 
+                        id="message-input" 
+                        placeholder="Digite sua mensagem aqui..." 
+                        maxlength="1000"
+                        onkeydown="if(event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); sendMessage(); }"
+                    ></textarea>
+                    <button id="send-button" onclick="sendMessage()">Enviar</button>
+                </div>
+            </div>
+            
+            <button class="btn" onclick="backToChatList()" style="margin-top: 20px; background: rgba(255, 255, 255, 0.1); color: #ffcc66; border: 2px solid #ffcc66;">
+                ← Voltar para lista de chats
+            </button>
+        </div>
+    </div>
+    
+    <!-- Navegação Fixa -->
+    <div class="fixed-nav">
+        <button onclick="window.location.href='/home'">🏠 Home</button>
+        <button onclick="window.location.href='/agendar'">📅 Agendar</button>
+        <button onclick="window.location.href='/minhas_consultas'">📋 Consultas</button>
+        <button onclick="window.location.href='/chat'" style="background: #ffaa33;">💬 Chat</button>
+        <button onclick="window.location.href='/perfil'">👤 Perfil</button>
+    </div>
+    
+    <script>
+        let psicologosComChat = [];
+        let psicologoAtual = null;
+        let intervaloAtualizacao = null;
+        
+        // Carregar psicólogos com quem o usuário pode conversar
+        async function carregarChats() {
+            try {
+                // Primeiro verificar se é cliente
+                const userResponse = await fetch('/api/usuario/atual', {
+                    credentials: 'include'
+                });
+                
+                if (userResponse.status === 401) {
+                    window.location.href = '/';
+                    return;
+                }
+                
+                const user = await userResponse.json();
+                
+                if (user.tipo !== 'cliente') {
+                    mostrarErro('Apenas clientes podem acessar o chat.');
+                    setTimeout(() => window.location.href = '/home', 2000);
+                    return;
+                }
+                
+                // Buscar psicólogos com consultas
+                const consultasResponse = await fetch('/api/minhas_consultas', {
+                    credentials: 'include'
+                });
+                
+                if (!consultasResponse.ok) {
+                    throw new Error('Erro ao carregar consultas');
+                }
+                
+                const consultas = await consultasResponse.json();
+                
+                // Filtrar psicólogos únicos com consultas
+                const psicologosIds = [...new Set(consultas.map(c => c.nome_psicologo ? c.id_consulta : null).filter(Boolean))];
+                
+                if (psicologosIds.length === 0) {
+                    document.getElementById('chat-selector').innerHTML = `
+                        <div class="no-chat">
+                            <h3 style="color: #ffcc66; margin-bottom: 15px;">📭 Nenhum chat disponível</h3>
+                            <p>Você precisa ter uma consulta agendada com um psicólogo para poder conversar.</p>
+                            <p style="margin: 20px 0;">Agende sua primeira consulta para começar a usar o chat!</p>
+                            <button onclick="window.location.href='/agendar'" 
+                                    class="btn" style="background: #ffcc66; color: #007f7f; max-width: 300px; margin: 0 auto;">
+                                📅 Agendar Consulta
+                            </button>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                // Carregar lista de psicólogos
+                const psicologosResponse = await fetch('/api/psicologos', {
+                    credentials: 'include'
+                });
+                
+                if (!psicologosResponse.ok) {
+                    throw new Error('Erro ao carregar psicólogos');
+                }
+                
+                const todosPsicologos = await psicologosResponse.json();
+                
+                // Filtrar psicólogos com quem o cliente tem consulta
+                psicologosComChat = todosPsicologos.filter(p => 
+                    consultas.some(c => c.nome_psicologo && c.nome_psicologo.includes(p.nome.split(' ')[0]))
+                );
+                
+                mostrarListaChats();
+                
+            } catch (error) {
+                console.error('Erro:', error);
+                document.getElementById('chat-selector').innerHTML = `
+                    <div class="error-message">
+                        ❌ Erro ao carregar chats
+                        <p style="margin-top: 10px; font-size: 0.9em;">${error.message}</p>
+                        <button onclick="carregarChats()" style="
+                            background: #ffcc66; 
+                            color: #007f7f; 
+                            border: none; 
+                            padding: 10px 20px; 
+                            border-radius: 8px; 
+                            margin-top: 15px; 
+                            cursor: pointer;
+                            font-weight: bold;">
+                            🔄 Tentar Novamente
+                        </button>
+                    </div>
+                `;
+            }
+        }
+        
+        function mostrarListaChats() {
+            const container = document.getElementById('chat-selector');
+            
+            if (!psicologosComChat || psicologosComChat.length === 0) {
+                container.innerHTML = `
+                    <div class="no-chat">
+                        <h3 style="color: #ffcc66; margin-bottom: 15px;">📭 Nenhum chat disponível</h3>
+                        <p>Você ainda não tem psicólogos para conversar.</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = `
+                <div class="chat-list">
+                    <h3 style="color: #ffcc66; margin-bottom: 15px;">Selecione um psicólogo para conversar:</h3>
+                    ${psicologosComChat.map(psicologo => `
+                        <div class="chat-item" onclick="iniciarChat(${psicologo.id_usuario}, '${psicologo.nome.replace(/'/g, "\\'")}')">
+                            <h3>👨‍⚕️ ${psicologo.nome}</h3>
+                            <p>${psicologo.especialidade || 'Psicólogo'}</p>
+                            <p style="font-size: 0.8em; color: rgba(255, 255, 255, 0.6);">
+                                CRP: ${psicologo.CRP || 'Não informado'}
+                            </p>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+        
+        function iniciarChat(idPsicologo, nomePsicologo) {
+            psicologoAtual = { id: idPsicologo, nome: nomePsicologo };
+            
+            document.getElementById('chat-selector').style.display = 'none';
+            document.getElementById('chat-active').style.display = 'block';
+            document.getElementById('psicologo-name').textContent = nomePsicologo;
+            
+            carregarMensagens(idPsicologo);
+            
+            // Iniciar atualização automática
+            if (intervaloAtualizacao) {
+                clearInterval(intervaloAtualizacao);
+            }
+            intervaloAtualizacao = setInterval(() => carregarMensagens(idPsicologo), 3000);
+        }
+        
+        async function carregarMensagens(idPsicologo) {
+            try {
+                const response = await fetch(`/api/chat/${idPsicologo}`, {
+                    credentials: 'include'
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Erro ao carregar mensagens');
+                }
+                
+                const mensagens = await response.json();
+                mostrarMensagens(mensagens);
+                
+            } catch (error) {
+                console.error('Erro ao carregar mensagens:', error);
+            }
+        }
+        
+        function mostrarMensagens(mensagens) {
+            const container = document.getElementById('messages-area');
+            
+            if (!mensagens || mensagens.length === 0) {
+                container.innerHTML = `
+                    <div class="no-chat" style="padding: 30px;">
+                        <p style="color: rgba(255, 255, 255, 0.6);">
+                            Nenhuma mensagem ainda. Seja o primeiro a enviar uma mensagem!
+                        </p>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = mensagens.map(msg => {
+                const data = new Date(msg.data_envio);
+                const hora = data.toLocaleTimeString('pt-BR', { 
+                    hour: '2-digit', 
+                    minute: '2-digit' 
+                });
+                
+                const isSent = msg.id_remetente == req.session.userId;
+                
+                return `
+                    <div class="message ${isSent ? 'sent' : 'received'}">
+                        <div class="message-header">
+                            <span class="message-sender">${isSent ? 'Você' : msg.nome_remetente}</span>
+                            <span class="message-time">${hora}</span>
+                        </div>
+                        <div class="message-content">${msg.mensagem}</div>
+                    </div>
+                `;
+            }).join('');
+            
+            // Rolagem automática para a última mensagem
+            container.scrollTop = container.scrollHeight;
+        }
+        
+        async function sendMessage() {
+            const input = document.getElementById('message-input');
+            const message = input.value.trim();
+            const button = document.getElementById('send-button');
+            
+            if (!message || !psicologoAtual) {
+                return;
+            }
+            
+            // Desabilitar botão durante envio
+            const originalText = button.textContent;
+            button.textContent = 'Enviando...';
+            button.disabled = true;
+            
+            try {
+                const response = await fetch('/api/chat/enviar', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        id_psicologo: psicologoAtual.id,
+                        mensagem: message
+                    })
+                });
+                
+                const resultado = await response.json();
+                
+                if (resultado.success) {
+                    input.value = '';
+                    carregarMensagens(psicologoAtual.id);
+                } else {
+                    alert('❌ Erro: ' + resultado.error);
+                }
+                
+            } catch (error) {
+                console.error('Erro ao enviar mensagem:', error);
+                alert('❌ Erro ao enviar mensagem. Tente novamente.');
+            } finally {
+                button.textContent = originalText;
+                button.disabled = false;
+                input.focus();
+            }
+        }
+        
+        function backToChatList() {
+            if (intervaloAtualizacao) {
+                clearInterval(intervaloAtualizacao);
+                intervaloAtualizacao = null;
+            }
+            
+            psicologoAtual = null;
+            document.getElementById('chat-active').style.display = 'none';
+            document.getElementById('chat-selector').style.display = 'block';
+            carregarChats();
+        }
+        
+        function mostrarErro(mensagem) {
+            document.getElementById('chat-selector').innerHTML = `
+                <div class="error-message">
+                    ❌ ${mensagem}
+                    <div style="margin-top: 20px;">
+                        <button onclick="window.location.href='/home'" 
+                                class="btn" style="background: #ffcc66; color: #007f7f;">
+                            ← Voltar para Home
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Verificar autenticação e carregar chats
+        async function inicializar() {
+            try {
+                const response = await fetch('/api/usuario/atual', {
+                    credentials: 'include'
+                });
+                
+                if (response.status === 401) {
+                    window.location.href = '/';
+                    return;
+                }
+                
+                const user = await response.json();
+                
+                if (user.tipo !== 'cliente') {
+                    mostrarErro('Apenas clientes podem acessar o chat.');
+                    setTimeout(() => window.location.href = '/home', 2000);
+                    return;
+                }
+                
+                carregarChats();
+                
+            } catch (error) {
+                console.error('Erro na inicialização:', error);
+                window.location.href = '/';
+            }
+        }
+        
+        // Guardar referência à sessão
+        let req = { session: { userId: null } };
+        
+        // Executar quando a página carregar
+        window.onload = async () => {
+            try {
+                const response = await fetch('/api/usuario/atual', {
+                    credentials: 'include'
+                });
+                
+                if (response.ok) {
+                    const user = await response.json();
+                    req.session.userId = user.id_usuario;
+                }
+                
+                inicializar();
+            } catch (error) {
+                window.location.href = '/';
+            }
+        };
+        
+        // Fechar conexão quando a página for fechada
+        window.addEventListener('beforeunload', () => {
+            if (intervaloAtualizacao) {
+                clearInterval(intervaloAtualizacao);
+            }
+        });
+    </script>
+</body>
+</html>

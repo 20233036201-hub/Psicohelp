@@ -1,0 +1,87 @@
+﻿<!DOCTYPE html>
+  <!--frontend/index.html  (essa poha ta na raiz do front-end)-->
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PsicoHelp - Login</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h2>👋 Bem-vindo ao PsicoHelp</h2>
+        <p style="text-align: center; margin-bottom: 25px; color: rgba(255, 255, 255, 0.9);">
+            Conectando pessoas a profissionais de saúde mental
+        </p>
+
+        <form id="loginForm">
+            <label for="email">📧 Email:</label>
+            <input type="email" id="email" placeholder="seu@email.com" required autofocus>
+
+            <label for="senha">🔒 Senha:</label>
+            <input type="password" id="senha" placeholder="Sua senha" required>
+
+            <button type="submit" class="btn">🔑 Entrar</button>
+        </form>
+
+        <div class="links">
+            <p>Primeira vez aqui? Escolha seu cadastro:</p>
+            <a href="/cadastro/cliente">👤 Sou Paciente/Cliente</a><br><br>
+            <a href="/cadastro/psicologo">👨‍⚕️ Sou Psicólogo(a)</a>
+        </div>
+    </div>
+    <script src="../navbar.js"></script>
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value.trim();
+            const senha = document.getElementById('senha').value;
+
+            if (!email || !senha) {
+                alert('Preencha todos os campos!');
+                return;
+            }
+
+            const btn = this.querySelector('.btn');
+            const originalText = btn.textContent;
+            btn.textContent = 'Entrando...';
+            btn.disabled = true;
+
+            try {
+                const response = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({ email, senha })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    // Pequeno delay para mostrar mensagem
+                    setTimeout(() => {
+                        window.location.href = '/home';
+                    }, 500);
+                } else {
+                    alert('❌ ' + data.error);
+                    btn.textContent = originalText;
+                    btn.disabled = false;
+                }
+            } catch (error) {
+                alert('❌ Erro de conexão. Verifique se o servidor está rodando.');
+                console.error('Erro:', error);
+                btn.textContent = originalText;
+                btn.disabled = false;
+            }
+        });
+
+        // Foco no campo de email ao carregar
+        window.onload = function() {
+            document.getElementById('email').focus();
+        };
+    </script>
+</body>
+</html>

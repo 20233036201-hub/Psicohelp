@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Feed - PsicoHelp</title>
+    <link rel="stylesheet" href="../style.css">
+</head>
+<body>
+    <div class="container">
+        <div class="nav-bar">
+            <button class="nav-btn active" onclick="window.location.href='/home'">🏠 Home</button>
+            <button class="nav-btn" onclick="window.location.href='/agendar'" id="btn-agendar">📅 Agendar</button>
+            <button class="nav-btn" onclick="window.location.href='/minhas_consultas'" id="btn-consultas">📋 Consultas</button>
+            <button class="nav-btn" onclick="window.location.href='/perfil'">👤 Perfil</button>
+            <button class="nav-btn btn-danger" onclick="logout()">🚪 Sair</button>
+        </div>
+        
+        <h1>🧠 PsicoHelp Feed</h1>
+        <p style="text-align: center; color: rgba(255, 255, 255, 0.8); margin-bottom: 30px;">
+            Compartilhe sua jornada e inspire outras pessoas
+        </p>
+        
+        <button class="btn" onclick="abrirModalPost()" id="btn-novo-post">✍️ Novo Post</button>
+        
+        <div id="feed-content">
+            <div class="loading">Carregando posts...</div>
+        </div>
+    </div>
+    
+    <!-- Modal Novo Post -->
+    <div id="modalPost" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">✍️ Novo Post</div>
+                <button class="modal-close" onclick="fecharModalPost()">✕</button>
+            </div>
+            
+            <form id="formPost">
+                <label for="postTitulo">Título:</label>
+                <input type="text" id="postTitulo" placeholder="Dê um título à sua história..." maxlength="100" required>
+                
+                <label for="postConteudo">Conteúdo:</label>
+                <textarea id="postConteudo" placeholder="Compartilhe sua experiência..." maxlength="1000" required></textarea>
+                
+                <button type="submit" class="btn">Publicar</button>
+                <button type="button" class="btn btn-secondary" onclick="fecharModalPost()">Cancelar</button>
+            </form>
+        </div>
+    </div>
+    <script src="../navbar.js"></script>
+    <script>
+        let usuarioAtual = null;
+        
+        // Verificar autenticação
+        async function verificarAutenticacao() {
+            try {
+                const response = await fetch('/api/usuario/atual', {
+                    credentials: 'include'
+                });
+                
+                if (response.status === 401) {
+                    window.location.href = '/';
+                    return;
+                }
+                
+                usuarioAtual = await response.json();
+                
+                // Esconder botões para psicólogos
+                if (usuarioAtual.tipo === 'psicologo') {
+                    document.getElementById('btn-agendar').style.display = 'none';
+                    document.getElementById('btn-consultas').style.display = 'none';
+                    document.getElementById('btn-novo-post').style.display = 'none';
+                }
+                
+                // Se for moderador, esconder também
+                if (usuarioAtual.tipo === 'moderador') {
+                    document.getElementById('btn-agendar').style.display = 'none';
+                    document.getElementById('btn-consultas').style.display = 'none';
+                    document.getElementById('btn-novo-post').style.display = 'none';
+                }
+                
+                carregarPosts();
+                
+            } catch (error) {
+                console.error('Erro:', error);
+                window.location.href = '/';
+            }
+        
+            try {
+                const response = await fetch('/api/usuario/atual', {
+                    credentials: 'include'
+                });
+                
+                if (response.status === 401) {
+                    window.location.href = '/';
+                    return;
+                }
+                
+                usuarioAtual = await response.json();
+                
+                // Esconder botões para psicólogos
+                if (usuarioAtual.tipo === 'psicologo') {
+                    document.getElementById('btn-agendar').style.display = 'none';
+                    document.getElementById('btn-consultas').style.display = 'none';
+                    document.getElementById('btn-novo-post').style.display = 'none';
+                }
+                
+                carregarPosts();
+                
+            } catch (error) {
+                console.error('Erro:', error);
+                window.location.href = '/';
+            }
+        }
+        
+        // Carregar posts
+        async function carregarPosts() {
+            try {
+                const response = await fetch('/api/feed', {
+                    credentials: 'include'
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Erro ao carregar posts');
+                }
+                
+                const posts = await response.json();
+                mostrarPosts(posts);
+                
+            } catch (error) {
+                document.getElementById('feed-content').innerHTML = `
+                    <div class="error-message">
+                        ❌ Erro ao carregar posts
+                        <button onclick="carregarPosts()" class="btn" style="margin-top: 10px;">🔄 Tentar Novamente</button>
+                    </div>
+                `;
+            }
+        }
+        
+        // Mostrar posts
+        function mostrarPosts(posts) {
+            const container = document.getElementById('feed-content');
+            
+            if (!posts || posts.length === 0) {
+                container.innerHTML = `
+                    <div class="no-data">
+                        <h3>📭 Nenhum post ainda</h3>
+                        <p>Seja o primeiro a compartilhar sua história!</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = posts.map(post => {
+                const data = new Date(post.data_postagem);
+                const dataFormatada = data.toLocaleDateString('pt-BR', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+                
+                return `
+                    <div class="post">
+                        <div class="post-header">
+                            <div class="post-author">👤 ${post.nome_cliente}</div>
+                            <div class="post-date">${dataFormatada}</div>
+                        </div>
+                        <div class="post-title">${post.titulo}</div>
+                        <div class="post-content">${post.conteudo}</div>
+                        <div class="post-actions">
+                            <button class="like-btn" onclick="curtirPost(${post.id_relato})">
+                                ❤️ ${post.curtidas || 0}
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        async function curtirPost(idRelato) {
+            try {
+                const btn = event.target;
+                const originalText = btn.textContent;
+                
+                btn.textContent = '❤️ Curtindo...';
+                btn.disabled = true;
+
+                const response = await fetch('/api/feed/curtir', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({ id_relato: idRelato })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    // Atualizar contador
+                    btn.textContent = `❤️ ${data.curtidas || 0}`;
+                    alert('✅ Post curtido!');
+                } else {
+                    alert('❌ ' + (data.error || 'Erro ao curtir post'));
+                    btn.textContent = originalText;
+                    btn.disabled = false;
+                }
+                
+            } catch (error) {
+                console.error('Erro ao curtir:', error);
+                alert('❌ Erro de conexão');
+                btn.textContent = originalText;
+                btn.disabled = false;
+            }
+        }
+        // Curtir post
+        async function curtirPost(idRelato) {
+            try {
+                const response = await fetch('/api/feed/curtir', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({ id_relato })
+                });
+                
+                if (response.ok) {
+                    carregarPosts(); // Recarregar posts
+                } else {
+                    console.error('Erro ao curtir post');
+                }
+                
+            } catch (error) {
+                console.error('Erro ao curtir:', error);
+            }
+        }     
+        // Modal de novo post
+        function abrirModalPost() {
+            document.getElementById('modalPost').style.display = 'flex';
+            document.getElementById('postTitulo').focus();
+        }
+        
+        function fecharModalPost() {
+            document.getElementById('modalPost').style.display = 'none';
+            document.getElementById('postTitulo').value = '';
+            document.getElementById('postConteudo').value = '';
+        }
+        
+        // Criar post
+        document.getElementById('formPost').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const titulo = document.getElementById('postTitulo').value.trim();
+            const conteudo = document.getElementById('postConteudo').value.trim();
+            const btn = this.querySelector('.btn');
+            
+            if (!titulo || !conteudo) {
+                alert('Preencha todos os campos');
+                return;
+            }
+            
+            btn.textContent = 'Publicando...';
+            btn.disabled = true;
+            
+            try {
+                const response = await fetch('/api/feed/post', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({ titulo, conteudo })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    fecharModalPost();
+                    alert('✅ Post criado com sucesso!');
+                    carregarPosts();
+                } else {
+                    alert('❌ ' + data.error);
+                    btn.textContent = 'Publicar';
+                    btn.disabled = false;
+                }
+                
+            } catch (error) {
+                alert('❌ Erro ao publicar post');
+                console.error('Erro:', error);
+                btn.textContent = 'Publicar';
+                btn.disabled = false;
+            }
+        });
+        
+        // Logout
+        async function logout() {
+            try {
+                await fetch('/api/logout', {
+                    method: 'POST',
+                    credentials: 'include'
+                });
+                window.location.href = '/';
+            } catch (error) {
+                window.location.href = '/';
+            }
+        }
+        
+        // Inicializar
+        window.onload = verificarAutenticacao;
+        
+        // Fechar modal com ESC
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                fecharModalPost();
+            }
+        });
+    </script>
+</body>
+</html>

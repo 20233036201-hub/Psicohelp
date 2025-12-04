@@ -1,61 +1,168 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Login - Psicohelp</title>
-  <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - PsicoHelp</title>
+    <link rel="stylesheet" href="../style.css">
+    <style>
+        .container {
+            max-width: 400px;
+            margin: 50px auto;
+            padding: 30px;
+        }
+        
+        .logo {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .logo h1 {
+            color: #ffcc66;
+            font-size: 2.5em;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            color: #ffcc66;
+            font-weight: bold;
+            display: block;
+            margin-bottom: 8px;
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ffcc66;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.9);
+            font-size: 16px;
+        }
+        
+        .btn-login {
+            width: 100%;
+            padding: 14px;
+            background: #ffcc66;
+            color: #007f7f;
+            border: none;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+        
+        .links {
+            text-align: center;
+            margin-top: 25px;
+        }
+        
+        .links a {
+            color: #ffcc66;
+            text-decoration: none;
+            margin: 0 10px;
+        }
+        
+        .error {
+            background: rgba(255, 0, 0, 0.2);
+            color: #ff6b6b;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+            display: none;
+        }
+    </style>
 </head>
 <body>
-  <div class="container">
-    <h2>Login</h2>
-
-    <form id="loginForm">
-      <label for="email">Digite seu Email:</label>
-      <input type="email" id="email" placeholder="exemplo@email.com" required>
-
-      <label for="senha">Digite sua Senha:</label>
-      <input type="password" id="senha" placeholder="********" required>
-
-      <button type="submit" class="btn">Confirmar</button>
-    </form>
-
-    <div class="links">
-      <p class="switch">Não tem conta?</p>
-      <a href="../cadastro_cliente/index.html">Sou Cliente</a> |
-      <a href="../cadastro_psicologo/index.html">Sou Psicólogo</a>
+    <div class="container">
+        <div class="logo">
+            <h1>🧠 PsicoHelp</h1>
+            <p style="color: rgba(255, 255, 255, 0.8);">Sua jornada começa aqui</p>
+        </div>
+        
+        <div id="error-message" class="error"></div>
+        
+        <form id="loginForm">
+            <div class="form-group">
+                <label for="email">Email:</label>
+                <input type="email" id="email" placeholder="seu@email.com" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="senha">Senha:</label>
+                <input type="password" id="senha" placeholder="********" required>
+            </div>
+            
+            <button type="submit" class="btn-login">Entrar</button>
+        </form>
+        
+        <div class="links">
+            <p style="color: rgba(255, 255, 255, 0.8); margin-bottom: 15px;">Não tem conta?</p>
+            <a href="/cadastro/cliente">Cadastrar como Cliente</a><br><br>
+            <a href="/cadastro/psicologo">Cadastrar como Psicólogo</a>
+        </div>
+        
+        <div class="links" style="margin-top: 30px;">
+            <p style="font-size: 0.9em; color: rgba(255, 255, 255, 0.6);">
+                Para teste: cliente@email.com / Admin123
+            </p>
+        </div>
     </div>
-  </div>
 
-  <script>
-  document.getElementById('loginForm').addEventListener('submit', async function(e) {
-    e.preventDefault();
-  
-    const email = document.getElementById('email').value;
-    const senha = document.getElementById('senha').value;
-
-    try {
-      const response = await fetch('/api/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ email, senha })
-      });
-
-      const data = await response.json();
-
-      if (data.success) {
-        alert(data.message);
-        // ✅ CORRETO - usa a ROTA do servidor
-        window.location.href = '/home';
-      } else {
-        alert('Erro: ' + data.error);
-      }
-    } catch (error) {
-      alert('Erro ao conectar com o servidor');
-    }
-  });
-  </script>
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value;
+            const senha = document.getElementById('senha').value;
+            const errorDiv = document.getElementById('error-message');
+            const btn = this.querySelector('button');
+            
+            // Mostrar loading
+            btn.textContent = 'Entrando...';
+            btn.disabled = true;
+            errorDiv.style.display = 'none';
+            
+            try {
+                const response = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({ email, senha })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    // Login bem-sucedido
+                    window.location.href = '/home';
+                } else {
+                    // Mostrar erro
+                    errorDiv.textContent = '❌ ' + data.error;
+                    errorDiv.style.display = 'block';
+                    btn.textContent = 'Entrar';
+                    btn.disabled = false;
+                }
+            } catch (error) {
+                errorDiv.textContent = '❌ Erro de conexão com o servidor';
+                errorDiv.style.display = 'block';
+                btn.textContent = 'Entrar';
+                btn.disabled = false;
+                console.error('Erro:', error);
+            }
+        });
+        
+        // Preencher campos de teste (remova em produção)
+        window.onload = function() {
+            document.getElementById('email').value = 'cliente@email.com';
+            document.getElementById('senha').value = 'Admin123';
+        };
+    </script>
 </body>
 </html>

@@ -3,194 +3,189 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Minhas Consultas - PsychoHelp</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            background: linear-gradient(135deg, #007f7f, #009999);
-            color: white;
-            min-height: 100vh;
-        }
-        
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        
-        h2 {
-            text-align: center;
-            color: #ffcc66;
-            margin-bottom: 30px;
-        }
-        
-        .consultas-list {
-            margin-bottom: 30px;
-        }
-        
-        .consulta-card {
-            background: #009999;
-            border-radius: 15px;
-            padding: 20px;
-            margin: 15px 0;
-            border: 2px solid #ffcc66;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-        }
-        
-        .consulta-card h3 {
-            color: #ffcc66;
-            margin-top: 0;
-            border-bottom: 1px solid #ffcc66;
-            padding-bottom: 10px;
-        }
-        
-        .consulta-card p {
-            margin: 8px 0;
-            color: #ffe9b3;
-        }
-        
-        .loading {
-            text-align: center;
-            padding: 40px;
-            color: #ffe9b3;
-            background: #009999;
-            border-radius: 15px;
-            border: 2px solid #ffcc66;
-        }
-        
-        .links {
-            text-align: center;
-            margin-top: 20px;
-        }
-        
-        .links a {
-            color: #ffcc66;
-            text-decoration: none;
-            font-weight: bold;
-        }
-        
-        .links a:hover {
-            text-decoration: underline;
-        }
-        
-        /* Status colors */
-        .consulta-card.agendada {
-            border-left: 5px solid #ffcc66;
-        }
-        
-        .consulta-card.confirmada {
-            border-left: 5px solid #4CAF50;
-        }
-        
-        .consulta-card.realizada {
-            border-left: 5px solid #2196F3;
-        }
-        
-        .consulta-card.cancelada {
-            border-left: 5px solid #ff6b6b;
-        }
-    </style>
+    <title>Minhas Consultas - PsicoHelp</title>
+    <link rel="stylesheet" href="../style.css">
 </head>
 <body>
     <div class="container">
-        <h2>📅 Minhas Consultas</h2>
+        <div class="nav-bar">
+            <button class="nav-btn" onclick="window.location.href='/home'">🏠 Home</button>
+            <button class="nav-btn" onclick="window.location.href='/agendar'">📅 Agendar</button>
+            <button class="nav-btn active" onclick="window.location.href='/minhas_consultas'">📋 Consultas</button>
+            <button class="nav-btn" onclick="window.location.href='/perfil'">👤 Perfil</button>
+            <button class="nav-btn btn-danger" onclick="logout()">🚪 Sair</button>
+        </div>
         
-        <div id="listaConsultas" class="consultas-list">
+        <h1>📋 Minhas Consultas</h1>
+        
+        <div style="margin-bottom: 30px;">
+            <button class="btn" onclick="window.location.href='/agendar'">➕ Nova Consulta</button>
+        </div>
+        
+        <div id="consultas-container">
             <div class="loading">Carregando suas consultas...</div>
         </div>
-        
-        <div class="links">
-            <a href="/home">← Voltar para Home</a>
-        </div>
     </div>
-
+    <script src="../navbar.js"></script>
     <script>
-        // Carregar consultas quando a página abrir
-        window.onload = carregarConsultas;
-
-        async function carregarConsultas() {
+        let usuarioAtual = null;
+        
+        // Verificar autenticação
+        async function verificarAutenticacao() {
             try {
-                // ID temporário - depois pega da sessão
-                const idCliente = 1;
+                const response = await fetch('/api/usuario/atual', {
+                    credentials: 'include'
+                });
                 
-                console.log('🔵 Buscando consultas para cliente:', idCliente);
+                if (response.status === 401) {
+                    window.location.href = '/';
+                    return;
+                }
                 
-                const response = await fetch(`/api/minhas-consultas/${idCliente}`);
-                const consultas = await response.json();
+                usuarioAtual = await response.json();
                 
-                console.log('🟢 Consultas recebidas:', consultas);
+                // Se não for cliente, mostrar mensagem
+                if (usuarioAtual.tipo !== 'cliente') {
+                    document.getElementById('consultas-container').innerHTML = `
+                        <div class="no-data">
+                            <h3>👤 Apenas clientes têm consultas</h3>
+                            <p>Esta funcionalidade está disponível apenas para clientes.</p>
+                        </div>
+                    `;
+                    return;
+                }
                 
-                mostrarConsultas(consultas);
+                carregarConsultas();
+                
             } catch (error) {
-                console.error('❌ Erro ao carregar consultas:', error);
-                document.getElementById('listaConsultas').innerHTML = 
-                    '<div class="loading">Erro ao carregar consultas. Tente novamente.</div>';
+                console.error('Erro:', error);
+                window.location.href = '/';
             }
         }
-
+        
+        // Carregar consultas
+        async function carregarConsultas() {
+            try {
+                const response = await fetch('/api/minhas_consultas', {
+                    credentials: 'include'
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Erro ao carregar consultas');
+                }
+                
+                const consultas = await response.json();
+                mostrarConsultas(consultas);
+                
+            } catch (error) {
+                document.getElementById('consultas-container').innerHTML = `
+                    <div class="error-message">
+                        ❌ Erro ao carregar consultas
+                        <button onclick="carregarConsultas()" class="btn" style="margin-top: 10px;">🔄 Tentar Novamente</button>
+                    </div>
+                `;
+            }
+        }
+        
+        // Mostrar consultas
         function mostrarConsultas(consultas) {
-            const lista = document.getElementById('listaConsultas');
+            const container = document.getElementById('consultas-container');
             
             if (!consultas || consultas.length === 0) {
-                lista.innerHTML = `
-                    <div class="loading">
+                container.innerHTML = `
+                    <div class="no-data">
                         <h3>📭 Nenhuma consulta agendada</h3>
-                        <p>Que tal agendar sua primeira consulta?</p>
-                        <button onclick="window.location.href='/agendar'" 
-                                style="background: #ffcc66; color: #007f7f; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; margin-top: 10px;">
-                            📅 Agendar Consulta
+                        <p>Você ainda não possui consultas agendadas.</p>
+                        <button onclick="window.location.href='/agendar'" class="btn" style="margin-top: 20px;">
+                            📅 Agendar Minha Primeira Consulta
                         </button>
                     </div>
                 `;
                 return;
             }
             
-            lista.innerHTML = consultas.map(consulta => `
-                <div class="consulta-card ${consulta.status}">
-                    <h3>👨‍⚕️ ${consulta.nome_psicologo || 'Psicólogo'}</h3>
-                    <p><strong>📅 Data:</strong> ${formatarData(consulta.data_consulta)}</p>
-                    <p><strong>⏰ Horário:</strong> ${formatarHorario(consulta.horario)}</p>
-                    <p><strong>📊 Status:</strong> ${formatarStatus(consulta.status)}</p>
-                    <p><strong>🎯 Especialidade:</strong> ${consulta.especialidade || 'Geral'}</p>
-                    ${consulta.observacoes ? `<p><strong>📝 Observações:</strong> ${consulta.observacoes}</p>` : ''}
-                    ${consulta.telefone_psicologo ? `<p><strong>📞 Contato:</strong> ${consulta.telefone_psicologo}</p>` : ''}
-                    
-                </div>
-            `).join('');
+            container.innerHTML = consultas.map(consulta => {
+                // CORREÇÃO: Formatar data corretamente
+                let dataFormatada;
+                let hora = consulta.horario ? consulta.horario.substring(0, 5) : '';
+                
+                try {
+                    const data = new Date(consulta.data_consulta);
+                    if (!isNaN(data.getTime())) {
+                        dataFormatada = data.toLocaleDateString('pt-BR', {
+                            weekday: 'long',
+                            day: '2-digit',
+                            month: 'long',
+                            year: 'numeric'
+                        });
+                    } else {
+                        dataFormatada = consulta.data_consulta || 'Data inválida';
+                    }
+                } catch (e) {
+                    dataFormatada = consulta.data_consulta || 'Data inválida';
+                }
+                
+                const statusText = {
+                    'agendada': '🟡 Agendada',
+                    'confirmada': '🟢 Confirmada',
+                    'realizada': '🔵 Realizada',
+                    'cancelada': '🔴 Cancelada'
+                }[consulta.status] || consulta.status;
+                
+                const statusClass = `status-${consulta.status}`;
+                
+                return `
+                    <div class="appointment-card ${consulta.status}">
+                        <div class="appointment-header">
+                            <div class="appointment-psychologist">👨‍⚕️ ${consulta.nome_psicologo}</div>
+                            <div class="appointment-status ${statusClass}">${statusText}</div>
+                        </div>
+                        
+                        <div style="margin: 15px 0;">
+                            <p><strong>📅 Data:</strong> ${dataFormatada}</p>
+                            <p><strong>⏰ Horário:</strong> ${hora}</p>
+                            <p><strong>🎯 Especialidade:</strong> ${consulta.especialidade || 'Geral'}</p>
+                            ${consulta.CRP ? `<p><strong>📄 CRP:</strong> ${consulta.CRP}</p>` : ''}
+                            ${consulta.observacoes ? `<p><strong>📝 Observações:</strong> ${consulta.observacoes}</p>` : ''}
+                        </div>
+                        
+                        ${consulta.status === 'agendada' || consulta.status === 'confirmada' ? `
+                        <div style="margin-top: 15px;">
+                            <button class="btn btn-danger" onclick="cancelarConsulta(${consulta.id_consulta})">
+                                ❌ Cancelar Consulta
+                            </button>
+                        </div>
+                        ` : ''}
+                    </div>
+                `;
+            }).join('');
         }
-
-        function formatarData(dataString) {
-            if (!dataString) return 'Data não informada';
-            const data = new Date(dataString + 'T00:00:00');
-            return data.toLocaleDateString('pt-BR');
-        }
-
-        function formatarHorario(horario) {
-            if (!horario) return 'Horário não informado';
-            return horario;
-        }
-
-        function formatarStatus(status) {
-            const statusMap = {
-                'agendada': '🟡 Agendada',
-                'confirmada': '🟢 Confirmada', 
-                'realizada': '🔵 Realizada',
-                'cancelada': '🔴 Cancelada'
-            };
-            return statusMap[status] || status;
-        }
-
+        // Cancelar consulta
         function cancelarConsulta(idConsulta) {
             if (confirm('Tem certeza que deseja cancelar esta consulta?')) {
-                alert('Funcionalidade de cancelamento em desenvolvimento! 🚧');
+                alert('⚠️ Funcionalidade de cancelamento em desenvolvimento.\n\nEntre em contato com o psicólogo para cancelar.');
+                // Em uma versão futura, implementar cancelamento via API
             }
         }
-
-        function verDetalhes(idConsulta) {
-            alert('Detalhes da consulta em desenvolvimento! 🚧');
+        
+        // Logout
+        async function logout() {
+            try {
+                await fetch('/api/logout', {
+                    method: 'POST',
+                    credentials: 'include'
+                });
+                window.location.href = '/';
+            } catch (error) {
+                window.location.href = '/';
+            }
         }
+        
+        // Inicializar
+        window.onload = verificarAutenticacao;
+        
+        // Atualizar a cada 30 segundos
+        setInterval(carregarConsultas, 30000);
     </script>
 </body>
 </html>

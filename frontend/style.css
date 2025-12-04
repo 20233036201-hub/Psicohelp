@@ -1,0 +1,581 @@
+/* ==================== RESET & BASE ==================== */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #007f7f 0%, #009999 50%, #006666 100%);
+    color: white;
+    min-height: 100vh;
+    line-height: 1.6;
+    padding: 20px;
+}
+
+/* ==================== CONTAINERS ==================== */
+.container {
+    max-width: 800px;
+    margin: 20px auto;
+    padding: 30px;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    border: 2px solid rgba(255, 204, 102, 0.3);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+/* ==================== TYPOGRAPHY ==================== */
+h1, h2, h3 {
+    color: #ffcc66;
+    margin-bottom: 20px;
+}
+
+h1 {
+    font-size: 2.2em;
+    text-align: center;
+}
+
+h2 {
+    font-size: 1.8em;
+    text-align: center;
+}
+
+h3 {
+    font-size: 1.4em;
+    border-bottom: 2px solid #ffcc66;
+    padding-bottom: 10px;
+}
+
+p {
+    margin-bottom: 15px;
+}
+
+/* ==================== FORMS ==================== */
+form {
+    margin: 20px 0;
+}
+
+label {
+    display: block;
+    margin: 15px 0 8px 0;
+    color: #ffcc66;
+    font-weight: bold;
+}
+
+input, select, textarea {
+    width: 100%;
+    padding: 12px 15px;
+    border: 2px solid #ffcc66;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.9);
+    font-size: 16px;
+    color: #333;
+    margin-bottom: 15px;
+}
+
+input:focus, select:focus, textarea:focus {
+    outline: none;
+    border-color: #ffaa33;
+    background: white;
+    box-shadow: 0 0 0 3px rgba(255, 204, 102, 0.3);
+}
+
+textarea {
+    min-height: 100px;
+    resize: vertical;
+    font-family: inherit;
+}
+
+/* ==================== BUTTONS ==================== */
+.btn {
+    display: block;
+    width: 100%;
+    padding: 14px 20px;
+    background: linear-gradient(135deg, #ffcc66, #ffaa33);
+    color: #007f7f;
+    border: none;
+    border-radius: 10px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin: 20px 0;
+    text-align: center;
+}
+
+.btn:hover {
+    background: linear-gradient(135deg, #ffaa33, #ff9900);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(255, 204, 102, 0.4);
+}
+
+.btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none !important;
+}
+
+.btn-secondary {
+    background: transparent;
+    color: #ffcc66;
+    border: 2px solid #ffcc66;
+}
+
+.btn-secondary:hover {
+    background: rgba(255, 204, 102, 0.1);
+}
+
+.btn-success {
+    background: linear-gradient(135deg, #4CAF50, #45a049);
+    color: white;
+}
+
+.btn-danger {
+    background: linear-gradient(135deg, #ff6b6b, #ff5252);
+    color: white;
+}
+
+/* ==================== NAVIGATION ==================== */
+.nav-bar {
+    background: rgba(0, 127, 127, 0.9);
+    border-radius: 15px;
+    padding: 15px;
+    margin-bottom: 30px;
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    border: 2px solid #ffcc66;
+}
+
+.nav-btn {
+    background: #ffcc66;
+    color: #007f7f;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-block;
+    text-align: center;
+    min-width: 100px;
+}
+
+.nav-btn:hover {
+    background: #ffaa33;
+    transform: translateY(-2px);
+}
+
+.nav-btn.active {
+    background: #ffaa33;
+    color: #007f7f;
+}
+
+/* ==================== CARDS ==================== */
+.card {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 15px;
+    padding: 20px;
+    margin: 15px 0;
+    border: 2px solid #ffcc66;
+    transition: all 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+}
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid rgba(255, 204, 102, 0.3);
+}
+
+/* ==================== POSTS ==================== */
+.post {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 15px;
+    padding: 20px;
+    margin: 20px 0;
+    border: 2px solid #ffcc66;
+}
+
+.post-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid rgba(255, 204, 102, 0.3);
+}
+
+.post-author {
+    color: #ffcc66;
+    font-weight: bold;
+}
+
+.post-date {
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 0.9em;
+}
+
+.post-title {
+    color: #ffcc66;
+    font-size: 1.3em;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+.post-content {
+    line-height: 1.6;
+    margin-bottom: 15px;
+}
+
+.post-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.like-btn {
+    background: rgba(255, 107, 107, 0.2);
+    color: #ff6b6b;
+    border: 2px solid #ff6b6b;
+    padding: 8px 15px;
+    border-radius: 20px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: bold;
+}
+
+.like-btn:hover {
+    background: #ff6b6b;
+    color: white;
+}
+
+/* ==================== PSYCHOLOGIST CARDS ==================== */
+.psychologist-card {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 15px;
+    padding: 20px;
+    margin: 15px 0;
+    border: 2px solid #ffcc66;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.psychologist-card:hover {
+    transform: translateY(-5px);
+    background: rgba(255, 255, 255, 0.15);
+    border-color: #ffaa33;
+}
+
+.psychologist-name {
+    color: #ffcc66;
+    font-size: 1.3em;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+.psychologist-specialty {
+    color: rgba(255, 255, 255, 0.9);
+    margin-bottom: 10px;
+}
+
+.psychologist-rating {
+    color: #ffcc66;
+    font-weight: bold;
+}
+
+/* ==================== APPOINTMENTS ==================== */
+.appointment-card {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 15px;
+    padding: 20px;
+    margin: 15px 0;
+    border-left: 5px solid #ffcc66;
+}
+
+.appointment-card.agendada {
+    border-left-color: #ffcc66;
+}
+
+.appointment-card.confirmada {
+    border-left-color: #4CAF50;
+}
+
+.appointment-card.realizada {
+    border-left-color: #2196F3;
+}
+
+.appointment-card.cancelada {
+    border-left-color: #ff6b6b;
+}
+
+.appointment-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.appointment-psychologist {
+    color: #ffcc66;
+    font-size: 1.2em;
+    font-weight: bold;
+}
+
+.appointment-status {
+    padding: 5px 15px;
+    border-radius: 20px;
+    font-size: 0.9em;
+    font-weight: bold;
+}
+
+.status-agendada {
+    background: rgba(255, 204, 102, 0.2);
+    color: #ffcc66;
+}
+
+.status-confirmada {
+    background: rgba(76, 175, 80, 0.2);
+    color: #6bff6b;
+}
+
+.status-realizada {
+    background: rgba(33, 150, 243, 0.2);
+    color: #6bb5ff;
+}
+
+.status-cancelada {
+    background: rgba(255, 107, 107, 0.2);
+    color: #ff6b6b;
+}
+
+/* ==================== PROFILE ==================== */
+.profile-header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.profile-avatar {
+    width: 100px;
+    height: 100px;
+    background: #ffcc66;
+    color: #007f7f;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.5em;
+    font-weight: bold;
+    margin: 0 auto 20px;
+    border: 4px solid white;
+}
+
+.profile-info {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 15px;
+    margin-bottom: 30px;
+}
+
+.info-item {
+    background: rgba(255, 255, 255, 0.05);
+    padding: 15px;
+    border-radius: 10px;
+    border-left: 4px solid #ffcc66;
+}
+
+.info-label {
+    color: #ffcc66;
+    font-size: 0.9em;
+    font-weight: bold;
+    margin-bottom: 5px;
+    display: block;
+}
+
+.info-value {
+    color: white;
+    font-size: 1.1em;
+    word-break: break-word;
+}
+
+/* ==================== MESSAGES ==================== */
+.message {
+    margin-bottom: 15px;
+    max-width: 70%;
+    padding: 12px 15px;
+    border-radius: 15px;
+    position: relative;
+}
+
+.message.sent {
+    background: #ffcc66;
+    color: #007f7f;
+    margin-left: auto;
+    border-bottom-right-radius: 5px;
+}
+
+.message.received {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    margin-right: auto;
+    border-bottom-left-radius: 5px;
+}
+
+.message-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 5px;
+    font-size: 0.85em;
+}
+
+.message-sender {
+    font-weight: bold;
+}
+
+.message-time {
+    opacity: 0.7;
+}
+
+/* ==================== UTILITIES ==================== */
+.loading {
+    text-align: center;
+    padding: 40px;
+    color: #ffcc66;
+}
+
+.loading::after {
+    content: '';
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 3px solid rgba(255, 204, 102, 0.3);
+    border-top-color: #ffcc66;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-left: 10px;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.error-message {
+    background: rgba(255, 107, 107, 0.2);
+    border: 2px solid #ff6b6b;
+    color: #ffcccc;
+    padding: 12px;
+    border-radius: 8px;
+    margin: 10px 0;
+    text-align: center;
+}
+
+.success-message {
+    background: rgba(107, 255, 107, 0.2);
+    border: 2px solid #6bff6b;
+    color: #ccffcc;
+    padding: 12px;
+    border-radius: 8px;
+    margin: 10px 0;
+    text-align: center;
+}
+
+.no-data {
+    text-align: center;
+    padding: 40px;
+    color: rgba(255, 255, 255, 0.7);
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 15px;
+    border: 2px dashed #ffcc66;
+    margin: 20px 0;
+}
+
+/* ==================== MODAL ==================== */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    padding: 20px;
+}
+
+.modal-content {
+    background: linear-gradient(135deg, #009999, #007f7f);
+    padding: 30px;
+    border-radius: 20px;
+    width: 100%;
+    max-width: 500px;
+    border: 3px solid #ffcc66;
+    max-height: 85vh;
+    overflow-y: auto;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.modal-title {
+    color: #ffcc66;
+    font-size: 1.5em;
+    font-weight: bold;
+}
+
+.modal-close {
+    background: #ff6b6b;
+    color: white;
+    border: none;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* ==================== RESPONSIVE ==================== */
+@media (max-width: 768px) {
+    .container {
+        margin: 10px;
+        padding: 20px;
+    }
+    
+    .nav-bar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .nav-btn {
+        margin: 5px 0;
+    }
+    
+    .profile-info {
+        grid-template-columns: 1fr;
+    }
+    
+    .modal-content {
+        padding: 20px;
+    }
+}
